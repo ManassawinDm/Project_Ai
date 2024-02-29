@@ -21,7 +21,6 @@ const register = async (req, res) => {
       db.query(insertAccountQuery, accountValues, (insertAccountErr, accountResult) => {
         if (insertAccountErr) return res.json(insertAccountErr);
 
-        // Assuming `account_id` is automatically generated and returned in `accountResult`
         const accountId = accountResult.insertId;
         
         const insertPortNumberQuery = "INSERT INTO Ports (account_id, port_number) VALUES (?, ?)";
@@ -62,7 +61,7 @@ const login = (req, res) => {
     const { password, ...userDataWithoutPassword } = user;
 
     //console.log("Cookie 'access_token' set with token:", token);
-    res.status(200).json(token);
+    res.status(200).json({token : token , email : req.body.email});
   });
 };
 

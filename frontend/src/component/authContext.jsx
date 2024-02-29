@@ -4,40 +4,46 @@ import axios from "axios";
 export const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
-  // Storing only the token in local storage for security
   const [authToken, setAuthToken] = useState(localStorage.getItem("token") || null);
+  // New state for storing the user's email
+ 
+  const [username, setUsername] = useState(localStorage.getItem("username") || null);
 
+  const extractUsernameFromEmail = (email) => {
+    return email.split('@')[0];
+  };
   const login = async (input) => {
     try {
       const res = await axios.post("http://localhost:8800/api/auth/login", input);
-      // Assuming the server responds with the token directly
-      const token = res.data;
-      // console.log(token)
-      setAuthToken(token); // Store the token in the state
-      localStorage.setItem("token", token); // Store the token in localStorage for persistence
+      const { token, email } = res.data; 
+
+      setAuthToken(token); 
+      const derivedUsername = extractUsernameFromEmail(email);
+      setUsername(derivedUsername);
+      localStorage.setItem("username", derivedUsername);
+      localStorage.setItem("token", token);
+    
     } catch (error) {
       console.error("Login error:", error);
-      // Handle login error (e.g., incorrect credentials, server error)
     }
   };
-  
+
   const logout = async () => {
-    // Optional: Inform the server about the logout if necessary
-    // await axios.post("http://localhost:8800/api/auth/logout", {}, {
-    //   headers: { Authorization: `Bearer ${authToken}` }
-    // });
+    // Optional: Server logout logic here
+
+    // Clear both authToken and userEmail from state and localStorage
     setAuthToken(null);
-    localStorage.removeItem("token"); // Clear the token from localStorage
+    setUsername(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
   };
 
   useEffect(() => {
-    // This effect persists authToken changes to localStorage,
-    // but since we're already doing that in login/logout functions,
-    // it's mainly useful for additional side effects or cleanup.
-  }, [authToken]);
+   
+  }, [authToken, username]); 
 
   return (
-    <AuthContext.Provider value={{ authToken, login, logout }}>
+    <AuthContext.Provider value={{ authToken, username, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

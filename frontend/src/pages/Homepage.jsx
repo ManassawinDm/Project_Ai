@@ -26,7 +26,6 @@ function Homepage() {
             <p>Start bot and Enjoy trading</p>
           </div>
         </section>
-
         <section className="bg-green-100 text-center py-6 rounded-xl mb-8">
           <p>Backtest Winrate 63%</p>
         </section>

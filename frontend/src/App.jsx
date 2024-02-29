@@ -9,9 +9,11 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home.jsx"
 import Navbar from "./component/Navbar.jsx";
-
+// import NavbarLogin from "./component/NavbarLogin.jsx";
 import Homepage from "./pages/Homepage.jsx";
-import Profile from "./pages/profile.jsx";
+import Profile from "./pages/Profile.jsx";
+import PayCom from "./pages/PayCom.jsx";
+
 
 const Layout = () => {
   return (
@@ -39,7 +41,15 @@ const router = createBrowserRouter([
       {
         path:"/home",
         element:<Homepage/>
-      }
+      },
+      {
+        path:"/profile",
+        element:<Profile/>
+      },
+      {
+        path:"/pay",
+        element:<PayCom/>
+      },
     ]
   },
   {

@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../component/authContext';
 import axios from "axios"
 
-const Profile = () => {
-  const [userEmail, setuserEmail] = useState(null);
+function Profile() {
+    const navigate = useNavigate();
+
+    const handlePay=()=>{
+        navigate("/pay")
+    }
+    const [message, setmessage] = useState(null)
+    const [userEmail, setuserEmail] = useState(null);
   const { authToken } = useContext(AuthContext);
   const [portNumbers, setPortNumbers] = useState([]); // Example port numbers
   const [selectedPortNumber, setSelectedPortNumber] = useState('');
@@ -29,8 +36,9 @@ const Profile = () => {
       console.log('Port added successfully');
       setPortNumbers(prevPortNumbers => [...prevPortNumbers, NewPort]);
       setNewPort('');
+      setmessage('Port added successfully')
     } catch (error) {
-      console.error("Failed to add new port:", error.response.data.message);
+      setmessage(error.response.data.message);
     }
   };
 
@@ -58,41 +66,68 @@ const Profile = () => {
     return <div>Loading...</div>;
   }
 
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
-        <div className="mb-4">
-          <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="username">
-            Email
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker"
-            id="username"
-            type="text"
-            placeholder={userEmail}
-            disabled
-          />
-        </div>
-        {/* <div className="mb-6">
+    <div className="flex justify-center p-4 mt-8">
+      {/* Wrapper for both forms with a max-width and centered */}
+      <div className="flex w-full max-w-4xl">
+        {/* Form Container */}
+        <div className="flex flex-grow">
+          {/* Existing Form */}
+          <div className="bg-white rounded-lg shadow-lg p-8 flex-grow">
+            <div className="flex flex-col items-center pb-10">
+              <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mb-4">
+                {/* Placeholder for the user's avatar */}
+              </div>
+              <button className="text-blue-600 hover:text-blue-700">
+                {/* Camera icon or edit icon suggested */}
+              </button>
+            </div>
+            <div className="space-y-6">
+              <input
+                className="w-full px-4 py-3 border rounded-lg"
+                type="email"
+                placeholder={userEmail}
+                disabled
+              />
+              {/* <input
+                className="w-full px-4 py-3 border rounded-lg"
+                type="password"
+                placeholder="Password"
+              />
+              <input
+                className="w-full px-4 py-3 border rounded-lg"
+                type="password"
+                placeholder="Confirm Password"
+              /> */}
+               <div className="mb-6">
           <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="email">
-            New Password
+            Add port
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3"
-            id="password"
-            type="password"
-            placeholder="******************"
+            id="add port"
+            type="text"
+            placeholder="add port number"
+            value={NewPort} 
+            onChange={handleAddPortChange}
 
           />
-        </div> */}
-        <div className="mb-6">
-          <label htmlFor="portNumber" className="block text-grey-darker text-sm font-bold mb-2">
-            Port Number
-          </label>
-          <select
+        </div>
+        <div className="flex items-start mb-6 text-red-500 justify-center">
+            {message}
+          </div>
+              <button className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"  onClick = { () => submitchange()}>
+                Save changes
+              </button>
+            </div>
+          </div>
+
+          {/* New Form */}
+          <div className=" flex items-center bg-white rounded-lg shadow-lg p-8 flex-grow ml-20 ">
+            <form className="space-y-6">
+            <select
             id="portNumber"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker"
+            className="w-full px-4 py-3 border rounded-lg"
             value={selectedPortNumber}
             onChange={handlePortNumberChange}
           >
@@ -103,44 +138,24 @@ const Profile = () => {
               </option>
             ))}
           </select>
-        </div>
-        <div className="mb-6">
-          <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="email">
-            Add port
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3"
-            id="add port"
-            type="text"
-            placeholder="add port number"
-            value={NewPort}
-            onChange={handleAddPortChange}
-
-          />
-        </div>
-        <div className="mb-6">
           <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="email">
             Commission
           </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3"
-            id="Commission"
-            type="number"
-            disabled
-
-          />   </div>
-        <div className="flex items-center justify-between">
-          <button
-            className="bg-blue-500 hover:bg-blue-dark text-white font-bold py-2 px-4 rounded"
-            type="button"
-            onClick={() => submitchange()}
-          >
-            Save changes
-          </button>
+              <input
+                className="w-full px-4 py-3 border rounded-lg"
+                type="tel"
+                placeholder="10.356 Bath"
+                disabled
+              />
+              <button onClick={handlePay} className=" w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out  ">
+                Pay Commission
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Profile;
