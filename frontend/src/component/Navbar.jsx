@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { AuthContext } from '../component/authContext';
 import { Link, useNavigate } from 'react-router-dom'; 
 
 function Navbar() {
-  const navigate = useNavigate(); 
-
+  const navigate = useNavigate();
+  const { authToken, logout } = useContext(AuthContext);
   const handleNavigate = (path) => () => {
     navigate(path);
+  };
+  const handleLogout = () => {
+    logout(); 
+    navigate('/'); 
   };
 
   return (
@@ -18,12 +23,20 @@ function Navbar() {
         <button onClick={handleNavigate('/qa')} className="hover:bg-gray-700 px-3 py-2 rounded">
           Q&A
         </button>
-        <button onClick={handleNavigate('/login')} className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded transition duration-300">
-          Login
-        </button>
+        {authToken && <Link to="/profile" className="hover:bg-gray-700 px-3 py-2 rounded">Profile</Link>}
+        {authToken ? (
+          <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition duration-300">
+            Logout
+          </button>
+        ) : (
+          <button onClick={handleNavigate('/login')} className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded transition duration-300">
+            Login
+          </button>
+        )}
       </div>
     </nav>
   );
 }
+
 
 export default Navbar;

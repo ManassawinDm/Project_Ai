@@ -9,9 +9,9 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home.jsx"
 import Navbar from "./component/Navbar.jsx";
-import NavbarLogin from "./component/NavbarLogin.jsx";
-import Homepage from "./pages/Homepage.jsx";
 
+import Homepage from "./pages/Homepage.jsx";
+import Profile from "./pages/profile.jsx";
 
 const Layout = () => {
   return (
@@ -21,18 +21,9 @@ const Layout = () => {
     </>
   )
 }
-const LayoutLogin = () => {
-  return (
-    <>
-      <NavbarLogin />
-      <Outlet />
-    </>
-  )
-}
-
 const router = createBrowserRouter([
   {
-    path: "/",
+
     element: <Layout/>,
     children:[
       {
@@ -42,8 +33,8 @@ const router = createBrowserRouter([
     ]
   },
   {
-    path:"/home",
-    element:<LayoutLogin/>,
+
+    element:<Layout/>,
     children:[
       {
         path:"/home",
@@ -58,6 +49,15 @@ const router = createBrowserRouter([
   {
     path:"/login",
     element:<Login/>
+  },
+  {
+    element:<Layout/>,
+    children:[
+      {
+        path:"/Profile",
+        element:<Profile/>
+      }
+    ]
   },
 
 ]);

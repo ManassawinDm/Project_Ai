@@ -4,7 +4,7 @@ const db = mysql.createConnection({
   host: 'localhost', // This is typically 'localhost' if your database runs on the same server as your Node app
   user: 'root', // Your database username
   password: '', // Your database password
-  database: 'bottrade' // The name of the database you want to connect to
+  database: 'tradingbot' // The name of the database you want to connect to
 });
 
 // Connect to the database

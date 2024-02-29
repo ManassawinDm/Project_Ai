@@ -10,7 +10,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/api/auth', authRouter);
-app.use('/api/users', usersRouter);
+app.use('/api/user', usersRouter);
 
 app.listen(8800, () => {
     console.log("Connected on port 8800");

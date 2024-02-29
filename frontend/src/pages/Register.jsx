@@ -4,9 +4,9 @@ import axios from "axios"
 
 function Register() {
   const [input, setinput] = useState({
-    username: "",
     email: "",
     password: "",
+    portnumber: "",
   })
   const [showerr, seterr] = useState(null)
   const navigate = useNavigate()
@@ -33,30 +33,30 @@ function Register() {
         <form>
           {/* Username field added */}
           <div className="mb-5">
-            <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900">Username</label>
+            <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900">Email</label>
             <div className="flex items-center border border-gray-300 bg-gray-50 rounded-lg p-2">
               <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
                 <i className="fas fa-user-circle"></i> {/* Icon changed to represent a user more generally */}
               </span>
-              <input type="text" id="username" className="bg-gray-50 outline-none flex-1" placeholder="Your Username " name='username' onChange={handleChange} />
+              <input type="text" id="email" className="bg-gray-50 outline-none flex-1" placeholder="Enter Your Email " name='email' onChange={handleChange} />
             </div>
           </div>
           <div className="mb-5">
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">Email / Username</label>
+            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">Password</label>
             <div className="flex items-center border border-gray-300 bg-gray-50 rounded-lg p-2">
               <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
                 <i className="fas fa-envelope"></i> {/* Changed icon to envelope for email */}
               </span>
-              <input type="text" id="email" className="bg-gray-50 outline-none flex-1" placeholder="name@company.com" name='email' onChange={handleChange} />
+              <input type="password" id="password" className="bg-gray-50 outline-none flex-1" placeholder="•••••••••" name='password' onChange={handleChange} />
             </div>
           </div>
           <div className="mb-5">
-            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">Password</label>
+            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">Port Number</label>
             <div className="flex items-center border border-gray-300 bg-gray-50 rounded-lg p-2">
               <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
                 <i className="fas fa-lock"></i>
               </span>
-              <input type="password" id="password" className="bg-gray-50 outline-none flex-1" placeholder="•••••••••" name='password' onChange={handleChange} />
+              <input type="text" id="portnumber" className="bg-gray-50 outline-none flex-1" placeholder="Enter your port number" name='portnumber' onChange={handleChange} />
             </div>
           </div>
           <div className="flex items-start mb-6 text-red-500 justify-center">
