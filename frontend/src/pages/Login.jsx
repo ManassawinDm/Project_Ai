@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../component/authContext';
 
@@ -10,6 +10,7 @@ function Login() {
   const [showerr, seterr] = useState(null)
   const navigate = useNavigate()
   const {login } = useContext(AuthContext);
+  const { authToken } = useContext(AuthContext);
 
   const handleChange = (e) => {
     setinput(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -26,6 +27,11 @@ function Login() {
       seterr(err.response.data);
     }
   };
+  useEffect(()=>{
+    if(authToken){
+      navigate("/home")
+    }
+  },[authToken])
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-200 to-indigo-200">
       <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">

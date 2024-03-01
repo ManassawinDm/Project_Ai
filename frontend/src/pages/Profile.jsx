@@ -53,7 +53,7 @@ function Profile() {
         // console.log(response.data.userData.port_numbers)
         setuserEmail(response.data.userData.email);
         setPortNumbers(response.data.userData.port_numbers);
-        console.log(response.data.userData.port_numbers)
+        console.log(response)
       } catch (error) {
         console.error("Failed to fetch user data:", error);
       }

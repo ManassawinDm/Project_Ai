@@ -13,6 +13,7 @@ import Navbar from "./component/Navbar.jsx";
 import Homepage from "./pages/Homepage.jsx";
 import Profile from "./pages/Profile.jsx";
 import PayCom from "./pages/PayCom.jsx";
+import Download from "./pages/Download.jsx";
 
 
 const Layout = () => {
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
         path:"/pay",
         element:<PayCom/>
       },
+      {
+        path:"/downloads",
+        element:<Download/>
+      }
     ]
   },
   {
