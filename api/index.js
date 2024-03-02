@@ -14,7 +14,17 @@ const storage = multer.diskStorage({
     }
   })
 
+  const storageBot = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, "../api/public/bot")
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now()+file.originalname)
+    }
+  })
+
 const upload = multer({storage})
+const uploadBot = multer({storageBot})
 const app = express();  
 app.use(express.json());
 app.use(cookieParser());
@@ -24,9 +34,14 @@ app.post('/api/upload', upload.single('slip'), function (req, res) {
     const file = req.file;
     res.status(200).json(file.filename)
   })
+  app.post('/api/uploadBot', uploadBot.single('Bot'), function (req, res) {
+    const file = req.file;
+    res.status(200).json(file.filename)
+  })
 
 app.use('/api/auth', authRouter);
 app.use('/api/user', usersRouter);
+app.use('/download', express.static('../api/public/bot'));
 
 app.listen(8800, () => {
     console.log("Connected on port 8800");
