@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from '../component/authContext';
-import axios from "axios"
+import { AuthContext } from "../component/authContext";
+import axios from "axios";
 
 function Profile() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handlePay=()=>{
-        navigate("/pay")
-    }
-    const [message, setmessage] = useState(null)
-    const [userEmail, setuserEmail] = useState(null);
+  const handlePay = () => {
+    navigate("/pay");
+  };
+  const [message, setmessage] = useState(null);
+  const [userEmail, setuserEmail] = useState(null);
   const { authToken } = useContext(AuthContext);
   const [portNumbers, setPortNumbers] = useState([]); // Example port numbers
-  const [selectedPortNumber, setSelectedPortNumber] = useState('');
-  const [NewPort, setNewPort] = useState('');
+  const [selectedPortNumber, setSelectedPortNumber] = useState("");
+  const [NewPort, setNewPort] = useState("");
 
   const handleAddPortChange = (event) => {
     setNewPort(event.target.value);
@@ -28,15 +28,19 @@ function Profile() {
 
   const submitchange = async () => {
     try {
-      await axios.post('http://localhost:8800/api/user/addPort', { portNumber: NewPort }, {
-        headers: {
-          Authorization: `Bearer ${authToken}`
+      await axios.post(
+        "http://localhost:8800/api/user/addPort",
+        { portNumber: NewPort },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
         }
-      });
-      console.log('Port added successfully');
-      setPortNumbers(prevPortNumbers => [...prevPortNumbers, NewPort]);
-      setNewPort('');
-      setmessage('Port added successfully')
+      );
+      console.log(NewPort);
+      setPortNumbers((prevPortNumbers) => [...prevPortNumbers, NewPort]);
+      setNewPort("");
+      setmessage("Port added successfully");
     } catch (error) {
       setmessage(error.response.data.message);
     }
@@ -45,15 +49,17 @@ function Profile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/api/user/fetchUserData', {
-          headers: {
-            Authorization: `Bearer ${authToken}`
+        const response = await axios.get(
+          "http://localhost:8800/api/user/fetchUserData",
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
           }
-        });
+        );
         // console.log(response.data.userData.port_numbers)
         setuserEmail(response.data.userData.email);
         setPortNumbers(response.data.userData.port_numbers);
-        console.log(response)
       } catch (error) {
         console.error("Failed to fetch user data:", error);
       }
@@ -62,10 +68,9 @@ function Profile() {
       fetchUserData();
     }
     if (!userEmail && !authToken) {
-      navigate("/login")
+      navigate("/login");
     }
   }, [authToken]);
-  
 
   return (
     <div className="flex justify-center p-4 mt-8">
@@ -91,24 +96,35 @@ function Profile() {
                 disabled
               />
 
-               <div className="mb-6">
-          <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="email">
-            Add port
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3"
-            id="add port"
-            type="text"
-            placeholder="add port number"
-            value={NewPort} 
-            onChange={handleAddPortChange}
-
-          />
-        </div>
-        <div className="flex items-start mb-6 text-green-700 justify-center">
-            {message}
-          </div>
-              <button className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"  onClick = { () => submitchange()}>
+              <div className="mb-6">
+                <label
+                  className="block text-grey-darker text-sm font-bold mb-2"
+                  htmlFor="email"
+                >
+                  Add port
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3"
+                  id="add port"
+                  type="text"
+                  placeholder="add port number"
+                  value={NewPort}
+                  onChange={handleAddPortChange}
+                />
+              </div>
+              {message === "Port added successfully" ? (
+                <div className="flex items-start mb-6 text-green-700 justify-center">
+                  {message}
+                </div>
+              ) : (
+                <div className="flex items-start mb-6 text-red-700 justify-center">
+                  {message}
+                </div>
+              )}
+              <button
+                className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"
+                onClick={() => submitchange()}
+              >
                 Save changes
               </button>
             </div>
@@ -117,29 +133,34 @@ function Profile() {
           {/* New Form */}
           <div className=" flex items-center bg-white rounded-lg shadow-lg p-8 flex-grow ml-20 ">
             <form className="space-y-6">
-            <select
-            id="portNumber"
-            className="w-full px-4 py-3 border rounded-lg"
-            value={selectedPortNumber}
-            onChange={handlePortNumberChange}
-          >
-
-            {portNumbers.map((portNumber, index) => (
-              <option key={index} value={portNumber}>
-                {portNumber}
-              </option>
-            ))}
-          </select>
-          <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="email">
-            Commission
-          </label>
+              <select
+                id="portNumber"
+                className="w-full px-4 py-3 border rounded-lg"
+                value={selectedPortNumber}
+                onChange={handlePortNumberChange}
+              >
+                {portNumbers.map((portNumber, index) => (
+                  <option key={index} value={portNumber}>
+                    {portNumber}
+                  </option>
+                ))}
+              </select>
+              <label
+                className="block text-grey-darker text-sm font-bold mb-2"
+                htmlFor="email"
+              >
+                Commission
+              </label>
               <input
                 className="w-full px-4 py-3 border rounded-lg"
                 type="tel"
                 placeholder="10.356 Bath"
                 disabled
               />
-              <button onClick={handlePay} className=" w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out  ">
+              <button
+                onClick={handlePay}
+                className=" w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out  "
+              >
                 Pay Commission
               </button>
             </form>
