@@ -21,7 +21,6 @@ function Login() {
 
     try {
       await login(input)
-      navigate("/home")
     } catch (err) {
       console.error("Registration error:", err);
       seterr(err.response.data);

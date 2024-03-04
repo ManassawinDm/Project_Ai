@@ -14,14 +14,21 @@ export const AuthContextProvider = ({ children }) => {
   const login = async (input) => {
     try {
       const res = await axios.post("http://localhost:8800/api/auth/login", input);
-      const { token, email } = res.data; 
+      const { token, email } = res.data;
 
-      setAuthToken(token); 
-      const derivedUsername = extractUsernameFromEmail(email);
-      setUsername(derivedUsername);
-      localStorage.setItem("username", derivedUsername);
-      localStorage.setItem("token", token);
-    
+      if (token && email) {
+        setAuthToken(token);
+        const derivedUsername = extractUsernameFromEmail(email);
+        setUsername(derivedUsername);
+        localStorage.setItem("username", derivedUsername);
+        localStorage.setItem("token", token);
+
+        // Navigate to /home if login is successful
+        history.push('/home');
+      } else {
+        // Stay on /login page, maybe show an error message
+        console.error("Login failed: No token or email received");
+      }
     } catch (error) {
       console.error("Login error:", error);
     }
