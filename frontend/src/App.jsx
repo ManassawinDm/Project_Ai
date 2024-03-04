@@ -15,6 +15,9 @@ import Profile from "./pages/Profile.jsx";
 import PayCom from "./pages/PayCom.jsx";
 import Download from "./pages/Download.jsx";
 
+//admin
+import AddBot from "./AdminPage/AddBot.jsx";
+
 
 const Layout = () => {
   return (
@@ -54,6 +57,10 @@ const router = createBrowserRouter([
       {
         path:"/downloads",
         element:<Download/>
+      },
+      {
+        path:"/admin/addbot",
+        element:<AddBot/>
       }
     ]
   },
