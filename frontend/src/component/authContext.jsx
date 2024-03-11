@@ -1,48 +1,63 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import {jwtDecode} from "jwt-decode";
 
 export const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token") || null);
-  const [userole,setrole] = useState(null);
- 
-  const [username, setUsername] = useState(localStorage.getItem("username") || null);
 
-  const extractUsernameFromEmail = (email) => {
-    return email.split('@')[0];
-  };
+  // Decode token to get user details on the fly
+  // If authToken is null, userDetails will also be null
+  const [userDetails, setUserDetails] = useState(() => {
+    if (authToken) {
+      try {
+        const decoded = jwtDecode(authToken);
+        return { email: decoded.email, role: decoded.role };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+      }
+    }
+    return null;
+  });
+
   const login = async (input) => {
     try {
-      const res = await axios.post("http://localhost:8800/api/auth/login", input);
-      const { token, email , role } = res.data; 
-
-      setAuthToken(token); 
-      setrole(role)
-      const derivedUsername = extractUsernameFromEmail(email);
-      setUsername(derivedUsername);
-      localStorage.setItem("username", derivedUsername);
-      localStorage.setItem("token", token);
-    
+      const response = await axios.post("http://localhost:8800/api/auth/login", input);
+      const { token } = response.data;
+      if (token) {
+        localStorage.setItem("token", token);
+        setAuthToken(token);
+      }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error:", error.response?.data);
+      throw error;
     }
   };
 
-  const logout = async () => {
-    setAuthToken(null);
-    setUsername(null);
-    setrole(null);
+  const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("username");
+    setAuthToken(null);
   };
 
+  // Update userDetails when authToken changes
   useEffect(() => {
-   
-  }, [authToken, username,userole]); 
+    if (authToken) {
+      try {
+        const decoded = jwtDecode(authToken);
+        setUserDetails({ email: decoded.email, role: decoded.role });
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setUserDetails(null);
+      }
+    } else {
+      setUserDetails(null);
+    }
+  }, [authToken]);
 
   return (
-    <AuthContext.Provider value={{ authToken, username,userole, login, logout }}>
+    <AuthContext.Provider value={{ authToken, userDetails, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

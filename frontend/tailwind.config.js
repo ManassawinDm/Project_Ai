@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      backgroundImage: {
+        'stupidgraph': "url('./src/assets/graph.jpg')",
+        'downloadbot': "url('./src/assets/downloadbot.png')",
+      }
+    }
   },
   plugins: [],
 }

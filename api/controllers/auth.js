@@ -29,15 +29,11 @@ const register = async (req, res) => {
           db.query(insertPortNumberQuery, portNumberValues, (insertPortNumberErr, portNumberResult) => {
             if (insertPortNumberErr) return res.json(insertPortNumberErr);
 
-
-            res.status(200).json("User, port number, and transaction have been created.");
             
-            const insertTransactionQuery = "INSERT INTO transaction (account_id,date) VALUES (?, NOW())";
-            // db.query(insertTransactionQuery, [accountId], (insertTransactionErr, transactionResult) => {
-            //   if (insertTransactionErr) return res.json(insertTransactionErr);
-              
-            //   res.status(200).json("User, port number, and transaction have been created.");
-            // });
+           
+            
+            const portId = portNumberResult.insertId;
+            res.status(200).json({ message: "User, port number, and transaction have been created.", portId: portId });
           });
         });
       });

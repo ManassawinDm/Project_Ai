@@ -9,21 +9,25 @@ function Login() {
   })
   const [showerr, seterr] = useState(null)
   const navigate = useNavigate()
-  const {login } = useContext(AuthContext);
+  const {login ,loginError } = useContext(AuthContext);
   const { authToken } = useContext(AuthContext);
 
   const handleChange = (e) => {
     setinput(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+    seterr(null);
+  
     try {
-      await login(input)
+      const response = await login(input);
+      console.log(response);
+      // navigate("/home");
     } catch (err) {
-      console.error("Registration error:", err);
-      seterr(err.response.data);
+      console.error("Login error:",  err.response.data);
+    const errorMessage = err.response.data || "An error occurred during login.";
+    seterr(errorMessage)
     }
   };
   useEffect(()=>{
@@ -32,36 +36,51 @@ function Login() {
     }
   },[authToken])
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-200 to-indigo-200">
-      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-10">Sign Into Your Account</h1>
-        <form>
-          <div className="mb-5">
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">Email / Username</label>
-            <div className="flex items-center border border-gray-300 bg-gray-50 rounded-lg p-2">
-              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
-                <i className="fas fa-user"></i>
-              </span>
-              <input type="text" id="email" className="bg-gray-50 outline-none flex-1" placeholder="name@company.com" name="email" onChange={handleChange} />
+     <div class="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
+      <div class="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
+        <div class="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
+          <div class="mt-12 flex flex-col items-center">
+            <div class="w-full flex-1 mt-36">
+            <div class="my-12 border-b text-center">
+                        <div
+                            class="leading-none px-2 inline-block text-lg text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2">
+                            Sign Into Your Account
+                        </div>
+                    </div>
+              
+
+              <div class="mx-auto max-w-xs">
+              <form>
+                <input
+                  class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                  type="text"
+                  name="email"
+                  placeholder="Email"
+                  onChange={handleChange}
+                />
+                <input
+                  class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                  type="password"
+                  placeholder="Password"
+                  name="password"
+                  onChange={handleChange}
+                />
+                {showerr && <label className="text-red-500">{showerr}</label>}
+                <button
+                  className="text-white bg-[#00df9a] hover:bg-[#44967c] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center mt-10"
+                  onClick={handleSubmit}
+                >
+                  Sign in
+                </button>
+                </form>
+                <span className="mt-5">Don't you have an account? <Link to="/register" className="text-blue-600 underline">Register</Link></span>
+              </div>
             </div>
           </div>
-          <div className="mb-5">
-            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">Password</label>
-            <div className="flex items-center border border-gray-300 bg-gray-50 rounded-lg p-2">
-              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
-                <i className="fas fa-lock"></i>
-              </span>
-              <input type="password" id="password" className="bg-gray-50 outline-none flex-1" placeholder="•••••••••" name="password" onChange={handleChange} />
-            </div>
-          </div>
-          <div className="flex items-start mb-6">
-            <div className="flex items-center h-5 justify-center">
-             {showerr}
-            </div>
-          </div>
-          <button className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center" onClick={handleSubmit}>Sign in</button>
-          <span className="mt-5">Don't you have an account? <Link to="/register" className="text-blue-600 underline">Register</Link></span>
-        </form>
+        </div>
+        <div class="flex-1 bg-green-200 text-center hidden lg:flex">  
+          <div class="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"></div>
+        </div>
       </div>
     </div>
   );
