@@ -33,7 +33,7 @@ const storageForBot = multer.diskStorage({
 const storageForport = multer.diskStorage({
     destination: (req, file, cb) => {
       // Ensure uploads directory exists or create it
-      const uploadPath = path.resolve(__dirname, '../../frontend/public/uploads/port');
+      const uploadPath = path.resolve(__dirname, '../public/user/port');
       fs.mkdirSync(uploadPath, { recursive: true });
       cb(null, uploadPath);
     },
@@ -171,32 +171,36 @@ const uploadPortHandler = (req, res) => {
             return res.status(400).send("No file uploaded.");
         }
 
-        const filename = decodeURIComponent(req.file.filename);
+        const portId = req.body.portId;
+        if (!portId) {
+            return res.status(400).json({ message: "Port ID is required." });
+        }
 
-        // Get only the filename with its extension
-        const cleanFilename = path.basename(filename);
+        // Calculate the relative file path from the server root directory
+        const relativeFilePath = path.relative(path.resolve(__dirname, '..'), req.file.path);
 
-     
-        const portId = req.body.portId; 
-        console.log(portId)
-       
-            const relativeFilePath = `uploads/port/${cleanFilename}`;
-            // Insert into the verifyport table
-            const insertVerifyPortQuery = "INSERT INTO verifyport (filename, filepath, port_id) VALUES (?, ?, ?)";
-            db.query(insertVerifyPortQuery, [cleanFilename, relativeFilePath, portId], (insertErr, insertResult) => {
-                if (insertErr) {
-                    console.error("Insert file error:", insertErr);
-                    return res.status(500).send("Internal Server Error when inserting file.");
-                }
-                res.json({
-                    success: true,
-                    message: "Port verification image uploaded successfully",
-                    filePath: relativeFilePath, // Send the relative path to be used on the client side
-                    portNumber: portId
-                });
+        // Assuming you have a valid portId and a corresponding record in your Ports table
+        // Here you insert the file information along with the portId into your verifyport table
+        const insertVerifyPortQuery = "INSERT INTO verifyport (filename, filepath, port_id) VALUES (?, ?, ?)";
+
+        // Use the original file name or modify it as per your requirements
+        const originalFileName = req.file.originalname;
+
+        db.query(insertVerifyPortQuery, [originalFileName, relativeFilePath, portId], (insertErr, insertResult) => {
+            if (insertErr) {
+                console.error("Insert file error:", insertErr);
+                return res.status(500).send("Internal Server Error when inserting file.");
+            }
+            res.json({
+                success: true,
+                message: "Port verification image uploaded successfully",
+                filePath: relativeFilePath, // This will be the path relative to the server root
+                portNumber: portId // Assuming portNumber is what you intended to send back
             });
         });
-    }
+    });
+}
+
 
     const botAndImageUploadHandler = (req, res) => {
         uploadBotandImage.fields([

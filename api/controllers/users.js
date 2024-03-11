@@ -126,7 +126,7 @@ const validateAccount = (req, res) => {
 
                     const totalCommission = sumResult[0].TotalCommission || 0;
                     console.log(totalCommission)
-                    if (totalCommission <= 100) {
+                    if (totalCommission <= 300) {
                         res.json({ isValid: true, verify: true, commissionCheck: true });
                     } else {
                         res.json({ isValid: true, verify: true, commissionCheck: false });

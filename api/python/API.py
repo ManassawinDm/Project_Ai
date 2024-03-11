@@ -1,12 +1,12 @@
+import os
 import zmq
 import json
-import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
-from keras.models import load_model
-import numpy as np
 import datetime
 import requests
-
+from keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
+import yfinance as yf
+import numpy as np
 
 ## ------------------------ AI -----------------------
 def fetch_data(symbol, start_date, end_date):
@@ -48,11 +48,7 @@ def handle_check_port_and_status(data):
                 "GOLD": "GC=F"
             }.get(currency)
             
-            model_filename = {
-                "EURUSD": "EURUSD_model.h5",
-                "USDJPY": "USDJPY_model.h5",
-                "GOLD": "GOLD_MODEL.h5"
-            }.get(currency)
+            model_filename = get_model_filename(currency)
 
             if not currency_download or not model_filename:
                 # Currency not supported
@@ -114,6 +110,12 @@ def handle_weekly_profit(data):
         print(f"Request failed: {e}")
         return {"success": False, "message": "Request failed"}
 
+
+def get_model_filename(currency):
+    model_filename = f"{currency}_model.h5"
+    if os.path.isfile(model_filename):
+        return model_filename
+    return None
 
 
 #--------------------- ZeroMQ Server --------------------

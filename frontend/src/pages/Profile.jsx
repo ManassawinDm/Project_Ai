@@ -192,10 +192,8 @@ function Profile() {
   const handleSelectAllTransactions = () => {
     event.preventDefault();
     if (selectedTransactions.length === transactions.length) {
-      // All transactions are currently selected, so clear selection
       setSelectedTransactions([]);
     } else {
-      // Not all transactions are selected, so select all
       setSelectedTransactions(transactions.map(t => t.Transaction_ID));
     }
   };
@@ -279,7 +277,7 @@ function Profile() {
           <div className="bg-white rounded-lg shadow-lg p-8 md:flex-grow">
             <form className="space-y-6">
             <select
-  id="portNumber"
+ id="portNumber"
   className="w-full px-4 py-3 border rounded-lg"
   value={selectedPortNumber}
   onChange={handleSelectPort}
