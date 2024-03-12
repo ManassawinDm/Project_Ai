@@ -9,6 +9,9 @@ import FormControl from '@mui/material/FormControl';
 import ListItemText from '@mui/material/ListItemText';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Imageviewr from '../component/imageview';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AddBot() {
   const [selectedBotFile, setSelectedBotFile] = useState(null);
@@ -24,7 +27,9 @@ function AddBot() {
   const backtestFileInputRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState('');
-
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [botToDelete, setBotToDelete] = useState(null);
+  
   const handleImageClick = (imagePath) => {
     setCurrentImage(imagePath);
     setIsModalOpen(true);
@@ -48,6 +53,14 @@ function AddBot() {
     }
   };
 
+  const handleOpenDeleteDialog = (botId) => {
+    setBotToDelete(botId);
+    setOpenDeleteDialog(true);
+  };
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+  
   
   const isAllSelected = 
   currencies.length > 0 && selectedCurrencies.length === currencies.length;
@@ -98,7 +111,13 @@ function AddBot() {
     event.preventDefault();
   
     if (!selectedBotFile || !selectedImgFile || selectedCurrencies.length === 0) {
-      alert('Please select both bot file, image, backtest image, and currencies.');
+      toast.warn('Please fill all the input',{position: "top-center",
+      autoClose: 1000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: true,
+      progress: undefined,});
       return;
     }
   
@@ -118,11 +137,17 @@ function AddBot() {
       });
   
       if (response.status === 200) {
-        alert("Upload successful");
+        toast.success('Upload successful', {
+position: "top-center",
+autoClose: 1000,
+hideProgressBar: false,
+closeOnClick: true,
+pauseOnHover: false,
+draggable: true,
+progress: undefined,
+});
   
-        const newBot = response.data;
-        
-        setBots(currentBots => [...currentBots, newBot]);
+        fetchBots();
   
         // Reset form and state
         botFileInputRef.current.value = "";
@@ -134,10 +159,26 @@ function AddBot() {
         setSelectedImgFile(null);
         setSelectedBacktestFile(null);
         setSelectedCurrencies([]);
+      }else{
+        toast.error("Upload failed ",{position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,});
       }
     } catch (error) {
       console.error(error);
-      alert("Upload failed");
+      toast.error("Upload failed. Error",{
+        position: "top-center",
+autoClose: 1000,
+hideProgressBar: false,
+closeOnClick: true,
+pauseOnHover: false,
+draggable: true,
+progress: undefined,
+      });
     }
   };
   
@@ -148,28 +189,24 @@ useEffect(() => {
     try {
       const response = await axios.get('http://localhost:8800/api/user/currencies');
       setCurrencies(response.data.currencies);
+    console.log(currencies)
     } catch (error) {
       console.error('Error fetching currencies:', error);
     }
   };
-
+  fetchBots();
   fetchCurrencies();
 }, []);
 
-useEffect(() => {
-  // Fetch bots on component mount
-  const fetchBots = async () => {
-    try {
-      const response = await axios.get('http://localhost:8800/api/bot/getdata');
-      setBots(response.data); 
-      console.log(bots)
-    } catch (error) {
-      console.error('Error fetching bots:', error);
-    }
-  };
+const fetchBots = async () => {
+  try {
+    const response = await axios.get('http://localhost:8800/api/bot/getdata');
+    setBots(response.data);
+  } catch (error) {
+    console.error('Error fetching bots:', error);
+  }
+};
 
-  fetchBots();
-}, []);
 const handleCurrencyChange = (event) => {
   const value = event.target.value;
   // Handling the "Select All" option
@@ -184,20 +221,54 @@ const handleCurrencyChange = (event) => {
   }
 };
 
-const handleDeleteBot = async (botId) => {
-  try {
-    console.log(botId)
-    const response = await axios.delete(`http://localhost:8800/api/bot/${botId}`);
-    if (response.status === 200) {
-      // Optionally, filter out the deleted bot from the bots state to update the UI
-      setBots(bots.filter(bot => bot.id !== botId));
-      alert('Bot deleted successfully.');
+const handleDeleteBot = async () => {
+  if (botToDelete) {
+    try {
+      const response = await axios.delete(`http://localhost:8800/api/bot/${botToDelete}`);
+      if (response.status === 200) {
+        // Update the state to remove the deleted bot from the UI
+        setBots(bots.filter(bot => bot.id !== botToDelete));
+        // Show success toast
+        toast.success('Bot deleted successfully.', {
+          position: "top-center",
+          autoClose: 1000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          });
+      } else {
+        // Handle server responses other than success, if any
+        toast.error("Failed to delete bot  " , {
+          position: "top-center",
+          autoClose: 1000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          });
+      }
+    } catch (error) {
+      console.error('Failed to delete bot:', error);
+      // Show error toast
+      toast.error('Failed to delete bot. Error', {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        });
+    } finally {
+      // Close the delete confirmation dialog regardless of outcome
+      handleCloseDeleteDialog();
     }
-  } catch (error) {
-    console.error('Failed to delete bot:', error);
-    alert('Failed to delete bot.');
   }
 };
+
 
 const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 const [currentImageURL, setCurrentImageURL] = useState('');
@@ -205,6 +276,7 @@ const [currentImageURL, setCurrentImageURL] = useState('');
 
   return (
     <div className="container mx-auto px-4 mt-8">
+       <ToastContainer />
     <h2 className="text-xl font-semibold text-center mb-6">Add Bot</h2>
     <form onSubmit={handleSubmit} className="mx-auto space-y-4">
     <div className="form-group">
@@ -322,25 +394,48 @@ const [currentImageURL, setCurrentImageURL] = useState('');
           />
           <h5 className="text-lg font-bold">{bot.name}</h5>
           <p className="text-sm">{bot.description}</p>
-          <p className="text-sm text-gray-600">Currencies: {bot.currencies.join(', ')}</p>
+          <p className="text-sm text-gray-600">Currencies: {bot.currencies?.join(', ') ?? ''}</p>
           <button
       onClick={() => handleImageClick(`http://localhost:8800/${bot.backtest}`)} 
         className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
       >
         BackTest
       </button>
-          <Button
-              variant="contained"
-              color="error"
-              onClick={() => handleDeleteBot(bot.id)}
-              sx={{ mt: 2 }} // Add some margin to the top for spacing
-            >
-              Delete Bot
-            </Button>
+      <Button
+  variant="contained"
+  color="error"
+  onClick={() => handleOpenDeleteDialog(bot.id)}
+  sx={{ mt: 2 }}
+>
+  Delete Bot
+</Button>
         </div>
       ))}
     </div>
     {isModalOpen && <Imageviewr imageUrl={currentImage} isOpen={isModalOpen} handleClose={() => setIsModalOpen(false)} />}
+    <Dialog
+  open={openDeleteDialog}
+  onClose={handleCloseDeleteDialog}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+>
+  <DialogTitle id="alert-dialog-title" sx={{ color: 'black' }}>
+    {"Confirm Delete"}
+  </DialogTitle>
+  <DialogContent>
+    <DialogContentText id="alert-dialog-description" sx={{ color: 'black' }}>
+      Are you sure you want to delete this bot?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+  <Button onClick={handleCloseDeleteDialog} sx={{ color: 'black' }}>Cancel</Button>
+  <Button onClick={handleDeleteBot} autoFocus sx={{ color: 'red' }}>
+    Delete
+  </Button>
+</DialogActions>
+
+</Dialog>
+
   </div>
 
     

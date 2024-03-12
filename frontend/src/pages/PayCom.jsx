@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
-
+import { useLocation,useNavigate } from 'react-router-dom';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function PayCom() {
+  const navigate = useNavigate();
   const location = useLocation();
   const { port_id, selectedTransactions, totalCommission } = location.state || {};
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [payerName, setPayerName] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const generateQRCode = async () => {
@@ -41,6 +46,10 @@ function PayCom() {
       setErrorMessage(''); // Clear any existing error message if name is now provided
     }
   };
+const handleOpenSubmitDialog = () => {
+  setOpenSubmitDialog(true);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,34 +59,64 @@ function PayCom() {
       return;
     }
 
+    setIsSubmitting(true);
+    handleOpenSubmitDialog();
+  };
+
+
+  const confirmSubmit = async () => {
     const formData = new FormData();
     formData.append('name', payerName);
     formData.append('file', selectedFile);
     formData.append('selectedTransactions', JSON.stringify(selectedTransactions));
     formData.append('totalCommission', parseFloat(totalCommission).toFixed(2).toString());
-
+  
     try {
-      const response = await axios.post('http://localhost:8800/api/file/upload/slip', formData, {
+      await axios.post('http://localhost:8800/api/file/upload/slip', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      const responseUpdateTransaction = await axios.post('http://localhost:8800/api/user/updatetransaction', {
-  transactionIds: JSON.stringify(selectedTransactions)
-});
-      console.log(response.data); // Handle success
-      // Clear form fields after successful submission
-      setPayerName('');
-      setSelectedFile(null);
-      setErrorMessage('');
+      await axios.post('http://localhost:8800/api/user/updatetransaction', {
+        transactionIds: JSON.stringify(selectedTransactions),
+      });
+  
+      // Success feedback
+      toast.success('Submission successful!', {
+        position: "top-center",
+        autoClose: 500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+      });
+  
+      setTimeout(() => {
+        navigate('/history');
+      }, 1000);
     } catch (error) {
       console.error("Failed to submit:", error);
+      toast.error('Failed to submit. Please try again.', {
+        // Additional toast configuration for error
+      });
       setErrorMessage('Failed to submit. Please try again.');
+    } finally {
+      setIsSubmitting(false); // Enable the button again
+      handleCloseSubmitDialog(); // Close dialog after submit
     }
   };
-
+  
+  const handleCloseSubmitDialog = () => {
+    setIsSubmitting(false); // Also reset isSubmitting when dialog is manually closed
+    setOpenSubmitDialog(false);
+  };
+  
+  
+  
   return (
     <div className="max-w-md mx-auto bg-white rounded-lg overflow-hidden md:max-w-lg">
+        <ToastContainer />
       <div className="md:flex">
         <div className="w-full p-4">
           <div className="relative text-center">
@@ -109,13 +148,37 @@ function PayCom() {
             />
             {selectedFile && <p className="text-sm text-gray-600">File selected: {selectedFile.name}</p>}
             <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-            >
-              Submit
-            </button>
+  type="button" // Keep as type="button" to prevent form submission
+  onClick={handleOpenSubmitDialog}
+  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+  disabled={isSubmitting} 
+>
+  {isSubmitting ? 'Submitting...' : 'Submit'}
+</button>
+
+
           </form>
         </div>
+        <Dialog
+  open={openSubmitDialog}
+  onClose={handleCloseSubmitDialog}
+  aria-labelledby="submit-dialog-title"
+  aria-describedby="submit-dialog-description"
+>
+  <DialogTitle id="submit-dialog-title">{"Confirm Submission"}</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="submit-dialog-description">
+      Are you sure you want to submit this payment?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleCloseSubmitDialog}>Cancel</Button>
+    <Button onClick={confirmSubmit} autoFocus>
+      Confirm
+    </Button>
+  </DialogActions>
+</Dialog>
+
       </div>
     </div>
   );

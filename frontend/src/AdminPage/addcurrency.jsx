@@ -1,6 +1,8 @@
 import React, { useState, useRef,useEffect } from 'react';
 import axios from 'axios';
 import LinearProgress from '@mui/material/LinearProgress';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import { ToastContainer } from 'react-toastify';
 
 function AddCurrency() {
   const [currencyName, setCurrencyName] = useState('');
@@ -10,7 +12,9 @@ function AddCurrency() {
   const fileInputRef = useRef(null);
   const [currencies, setCurrencies] = useState([]);
   const [error, setError] = useState(null);
-  
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+const [currencyToDelete, setCurrencyToDelete] = useState(null);
+
   const fetchCurrencies = async () => {
     setIsLoading(true);
     setError(null);
@@ -29,23 +33,33 @@ function AddCurrency() {
   useEffect(() => {
     fetchCurrencies();
   }, []);
-
-  const handleDeleteCurrency = async (currencyId) => {
-    console.log(currencyId)
-    try {
-        const response = await axios.delete(`http://localhost:8800/api/admin/deletecurrencies/${currencyId}`);
-        console.log(response.data.message);
-        
-        // Filter out the deleted currency from the currencies state
-        const updatedCurrencies = currencies.filter(currency => currency.id !== currencyId);
+  const handleOpenDeleteDialog = (currencyId) => {
+    setCurrencyToDelete(currencyId);
+    setOpenDeleteDialog(true);
+  };
+  
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+  
+  const handleDeleteCurrency = async () => {
+    if (currencyToDelete) {
+      setIsLoading(true);
+      try {
+        await axios.delete(`http://localhost:8800/api/admin/deletecurrencies/${currencyToDelete}`);
+        const updatedCurrencies = currencies.filter(currency => currency.id !== currencyToDelete);
         setCurrencies(updatedCurrencies);
-        
-        setMessage('Currency deleted successfully.');
-} catch (error) {
-console.error('Failed to delete currency:', error);
-setMessage(error.response?.data?.message || 'Error deleting currency.');
-} 
-};
+        toast.success('Currency deleted successfully.');
+      } catch (error) {
+        console.error('Failed to delete currency:', error);
+        toast.error(error.response?.data?.message || 'Error deleting currency.');
+      } finally {
+        setIsLoading(false);
+        handleCloseDeleteDialog(); // Close the dialog
+      }
+    }
+  };
+  
 
   const handleNameChange = (event) => {
     setCurrencyName(event.target.value);
@@ -97,6 +111,7 @@ const handleSubmit = async (e) => {
 
   return (
 <div className="container mx-auto px-4 mt-8 sm:max-w-lg lg:max-w-full" style={{ position: 'relative' }}>
+  <ToastContainer/>
   <h2 className="text-xl font-semibold text-center mb-6">Add Currency</h2>
   {message && (
     <div className={`text-center mb-4 ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
@@ -153,14 +168,35 @@ const handleSubmit = async (e) => {
         <p className="text-sm text-gray-600">{new Date(currency.dateAdded).toLocaleDateString()}</p>
         {/* Delete Button */}
         <button
-          onClick={() => handleDeleteCurrency(currency.id)}
-          className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-          disabled={isLoading}
-        >
-          Delete
-        </button>
+  onClick={() => handleOpenDeleteDialog(currency.id)}
+  className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+  disabled={isLoading}
+>
+  Delete
+</button>
+
       </div>
     ))}
+    <Dialog
+  open={openDeleteDialog}
+  onClose={handleCloseDeleteDialog}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+>
+  <DialogTitle id="alert-dialog-title">{"Confirm Deletion"}</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="alert-dialog-description">
+      Are you sure you want to delete this currency?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+    <Button onClick={handleDeleteCurrency} autoFocus>
+      Delete
+    </Button>
+  </DialogActions>
+</Dialog>
+
   </div>
 </div>
 
