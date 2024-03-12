@@ -5,7 +5,6 @@ import LinearProgress from '@mui/material/LinearProgress';
 function AddCurrency() {
   const [currencyName, setCurrencyName] = useState('');
   const [currencyImage, setCurrencyImage] = useState(null);
-  const [yfinanceCurrency, setYfinanceCurrency] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -56,9 +55,6 @@ setMessage(error.response?.data?.message || 'Error deleting currency.');
     setCurrencyImage(event.target.files[0]);
   };
 
-  const handleYfinanceCurrencyChange = (event) => {
-    setYfinanceCurrency(event.target.value);
-  };
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -74,7 +70,7 @@ const handleSubmit = async (e) => {
   const formData = new FormData();
   formData.append('name', currencyName);
   formData.append('image', currencyImage);
-  formData.append('yfinanceIdentifier', yfinanceCurrency);
+
 
   try {
     const response = await axios.post('http://localhost:8800/api/file/addCurrency', formData, {
@@ -85,7 +81,6 @@ const handleSubmit = async (e) => {
     setMessage(response.data.message);
     setCurrencyName('');
     setCurrencyImage(null);
-    setYfinanceCurrency('');
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -123,19 +118,7 @@ const handleSubmit = async (e) => {
         required
       />
     </div>
-    <div className="form-group">
-      <label htmlFor="yfinanceCurrency" className="block text-lg font-medium text-gray-700">
-        Yahoo Finance Currency Identifier (e.g., USDJPY=X, EURUSD=X)
-      </label>
-      <input
-        id="yfinanceCurrency"
-        type="text"
-        value={yfinanceCurrency}
-        onChange={handleYfinanceCurrencyChange}
-        className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-        placeholder="Enter Yahoo Finance currency identifier"
-      />
-    </div>
+
     <div className="form-group">
       <label htmlFor="currencyImage" className="block text-lg font-medium text-gray-700">
         Currency Image
@@ -167,7 +150,6 @@ const handleSubmit = async (e) => {
           className="w-20 h-20 object-cover mb-2"
         />
         <h5 className="text-lg font-bold">{currency.name}</h5>
-        <p className="text-sm">{currency.yfinanceIdentifier}</p>
         <p className="text-sm text-gray-600">{new Date(currency.dateAdded).toLocaleDateString()}</p>
         {/* Delete Button */}
         <button

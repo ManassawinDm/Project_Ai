@@ -290,48 +290,49 @@ const botAndImageUploadHandler = (req, res) => {
 };
 
     
-    const CurrencyUploadHandler = (req, res) => {
-        uploadCurrencyImage(req, res, (error) => {
-          if (error) {
-            return res.status(500).json({ message: "Error uploading image", error: error.message });
+const CurrencyUploadHandler = (req, res) => {
+    uploadCurrencyImage(req, res, (error) => {
+      if (error) {
+        return res.status(500).json({ message: "Error uploading image", error: error.message });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file uploaded." });
+      }
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Currency name is required." });
+      }
+  
+      const checkSql = "SELECT COUNT(*) AS count FROM currencies WHERE name = ?";
+      db.query(checkSql, [name], (checkErr, checkResults) => {
+        if (checkErr) {
+          console.error('Database check error:', checkErr);
+          return res.status(500).json({ message: "Error checking for existing currency name" });
+        }
+        if (checkResults[0].count > 0) {
+          return res.status(409).json({ message: "Currency name already exists" });
+        }
+  
+        const pythonProcess = spawn('python', ['./python/train_model.py',name, new Date().toISOString().split('T')[0]]);
+        pythonProcess.on('close', (code) => {
+          if (code !== 0) {
+            return res.status(500).json({ message: "Failed to execute Python script" });
           }
-          if (!req.file) {
-            return res.status(400).json({ message: "No image file uploaded." });
-          }
-          const { name, yfinanceIdentifier } = req.body;
-          if (!name || !yfinanceIdentifier) {
-            return res.status(400).json({ message: "Currency name and Yahoo Finance identifier are required." });
-          }
-      
-          const checkSql = "SELECT COUNT(*) AS count FROM currencies WHERE name = ?";
-          db.query(checkSql, [name], (checkErr, checkResults) => {
-            if (checkErr) {
-              console.error('Database check error:', checkErr);
-              return res.status(500).json({ message: "Error checking for existing currency name" });
+          const imageFilePath = path.relative(__dirname, req.file.path);
+          const currentDate = new Date().toISOString().split('T')[0];
+          const insertSql = "INSERT INTO currencies (name, imagePath, dateAdded) VALUES (?, ?, ?)";
+          db.query(insertSql, [name, imageFilePath, currentDate], (insertErr, insertResult) => {
+            if (insertErr) {
+              console.error('Database insert error:', insertErr);
+              return res.status(500).json({ message: "Failed to add currency" });
             }
-            if (checkResults[0].count > 0) {
-              return res.status(409).json({ message: "Currency name already exists" });
-            }
-      
-            const pythonProcess = spawn('python', ['./python/train_model.py', yfinanceIdentifier, new Date().toISOString().split('T')[0], name]);
-            pythonProcess.on('close', (code) => {
-              if (code !== 0) {
-                return res.status(500).json({ message: "Failed to execute Python script" });
-              }
-              const imageFilePath = path.relative(__dirname, req.file.path);
-              const currentDate = new Date().toISOString().split('T')[0];
-              const insertSql = "INSERT INTO currencies (name, yfinanceIdentifier, imagePath, dateAdded) VALUES (?, ?, ?, ?)";
-              db.query(insertSql, [name, yfinanceIdentifier, imageFilePath, currentDate], (insertErr, insertResult) => {
-                if (insertErr) {
-                  console.error('Database insert error:', insertErr);
-                  return res.status(500).json({ message: "Failed to add currency" });
-                }
-                res.json({ message: "Currency added successfully and Python script executed." });
-              });
-            });
+            res.json({ message: "Currency added successfully and Python script executed." });
           });
         });
-      };
+      });
+    });
+};
+
       
 
 // Export handlers

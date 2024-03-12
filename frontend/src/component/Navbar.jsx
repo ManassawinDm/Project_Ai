@@ -246,7 +246,7 @@ function Navbar() {
       <div className="md:flex items-center gap-3 flex-wrap justify-end w-full hidden text-base ">
        
         <button
-          onClick={() => navigate("/qa")}
+          onClick={() => navigate("/Q&A")}
           className="hover:bg-gray-700 px-5 py-2 rounded whitespace-nowrap"
         >
           Q&A

@@ -9,12 +9,115 @@ import pandas as pd
 import math
 import numpy as np
 from datetime import datetime, timedelta
+import sys
+currency_to_yfinance = {
+    # Forex
+    "EURUSD": "EURUSD=X",
+    "USDJPY": "USDJPY=X",
+    "GBPUSD": "GBPUSD=X",
+    "AUDUSD": "AUDUSD=X",
+    "USDCHF": "USDCHF=X",
+    "USDCAD": "USDCAD=X",
+    "NZDUSD": "NZDUSD=X",
+    "EURJPY": "EURJPY=X",
+    "EURGBP": "EURGBP=X",
+    "EURCAD": "EURCAD=X",
+    "EURAUD": "EURAUD=X",
+    "EURCHF": "EURCHF=X",
+    "EURSEK": "EURSEK=X",
+    "EURNOK": "EURNOK=X",
+    "EURNZD": "EURNZD=X",
+    "GBPJPY": "GBPJPY=X",
+    "GBPCHF": "GBPCHF=X",
+    "GBPCAD": "GBPCAD=X",
+    "GBPAUD": "GBPAUD=X",
+    "GBPNZD": "GBPNZD=X",
+    "AUDJPY": "AUDJPY=X",
+    "AUDCAD": "AUDCAD=X",
+    "AUDCHF": "AUDCHF=X",
+    "AUDNZD": "AUDNZD=X",
+    "CADJPY": "CADJPY=X",
+    "CHFJPY": "CHFJPY=X",
+    "NZDJPY": "NZDJPY=X",
+    "USDSGD": "USDSGD=X",
+    "USDHKD": "USDHKD=X",
+    "USDKRW": "USDKRW=X",
+    "USDINR": "USDINR=X",
+    "USDBRL": "USDBRL=X",
+    "USDMXN": "USDMXN=X",
+    "USDZAR": "USDZAR=X",
+    "USDRUB": "USDRUB=X",
+    "USDCNY": "USDCNY=X",
+    "USDTRY": "USDTRY=X",
+    "USDTHB": "USDTHB=X",
+    "USDPHP": "USDPHP=X",
+    "USDMYR": "USDMYR=X",
+    "USDIDR": "USDIDR=X",
+    "EURPLN": "EURPLN=X",
+    "EURTRY": "EURTRY=X",
+    "EURZAR": "EURZAR=X",
+    "EURMXN": "EURMXN=X",
+    "EURHUF": "EURHUF=X",
+    "EURCZK": "EURCZK=X",
+    # Commodities
+    "GOLD": "GC=F",
+    "SILVER": "SI=F",
+    "OIL": "CL=F",
+    "PLATINUM": "PL=F",
+    "PALLADIUM": "PA=F",
+    "COPPER": "HG=F",
+    "NATURALGAS": "NG=F",
+    "WHEAT": "ZW=F",
+    "CORN": "ZC=F",
+    "SOYBEAN": "ZS=F",
+    # Indices
+    "S&P500": "^GSPC",
+    "DOWJONES": "^DJI",
+    "NASDAQ": "^IXIC",
+    "FTSE100": "^FTSE",
+    
+    "GER30": "^GDAXI",
+    "JP225": "^N225",
+    "HSI": "^HSI",
+    # Stocks examples
+    "APPLE": "AAPL",
+    "GOOGLE": "GOOGL",
+    "TESLA": "TSLA",
+    "AMAZON": "AMZN",
+    "FACEBOOK": "META",
+    "NETFLIX": "NFLX",
+    "ALIBABA": "BABA",
+    "MICROSOFT": "MSFT",
+    "NVIDIA": "NVDA",
+    "VISA": "V",
+    # Cryptocurrencies
+    "BTCUSD": "BTC-USD",
+    "ETHUSD": "ETH-USD",
+    "XRPUSD": "XRP-USD",
+    "BCHUSD": "BCH-USD",
+    "LTCUSD": "LTC-USD",
+    "EOSUSD": "EOS-USD",
+    "BNBUSD": "BNB-USD",
+    "XTZUSD": "XTZ-USD",
+    "XLMUSD": "XLM-USD",
+    "ADAUSD": "ADA-USD",
+    # Bonds
+    "US10Y": "US10YB=RR",
+    "US30Y": "US30YB=RR",
+    "GER10Y": "DE10YB=RR",
+    }
 
-def train_model(yfinance_identifier, end_date, currency_name):
+def train_model(currency_name, end_date):
     # Use yfinance identifier as ticker symbol
-    ticker_symbol = f"{yfinance_identifier}"
-
-    # Download data directly from yfinance
+    yfinance_identifier = currency_to_yfinance.get(currency_name)
+    
+    if not yfinance_identifier:
+        print(f"No yFinance identifier found for {currency_name}.", file=sys.stderr)
+        sys.exit(1)
+    
+    ticker_symbol = yfinance_identifier
+    end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+    start_date = (end_date_obj - timedelta(days=5*365)).strftime("%Y-%m-%d")
     df = yf.download(ticker_symbol, start=start_date, end=end_date)
     df.reset_index(inplace=True)
     df['Date'] = pd.to_datetime(df['Date'])
@@ -55,16 +158,11 @@ def train_model(yfinance_identifier, end_date, currency_name):
         print(f"Error saving the model for {currency_name}: {e}")
 
 if __name__ == "__main__":
-    # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Train LSTM model for currency prediction")
-    parser.add_argument("yfinance", type=str, help="YFinance identifier for the currency")
-    parser.add_argument("endDate", type=str, help="End date for fetching historical data (YYYY-MM-DD)")
     parser.add_argument("currencyName", type=str, help="Name of the currency")
+    parser.add_argument("endDate", type=str, help="End date for fetching historical data (YYYY-MM-DD)")
 
     args = parser.parse_args()
 
-    # Define start date
-    start_date = "2018-01-01"
-
     # Call train_model function with parsed arguments
-    train_model(args.yfinance, args.endDate, args.currencyName)
+    train_model(args.currencyName, args.endDate)

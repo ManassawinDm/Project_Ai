@@ -222,7 +222,7 @@ const filteredBots = bots.filter(
               placeholder="Search bots..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="form-input w-full px-3 py-2 border bg-[#000300] border-green-300  rounded-md shadow-sm"
+              className="form-input w-full px-3 py-2 border bg-[#000300] border-green-300  rounded-md shadow-sm  focus:ring-2 focus:ring-[#00df9a] focus:border-[#00df9a]"
             />
           </div>
         </div>
