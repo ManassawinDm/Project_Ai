@@ -25,6 +25,7 @@ function HistoryPage() {
             }
           );
         setPorts(response.data.userData.ports || []);
+        console.log(response)
       } catch (error) {
         console.error('Error fetching ports:', error);
       }

@@ -71,6 +71,12 @@ function Navbar() {
             Check Payment
           </button>
           <button
+            onClick={() => navigate("/admin/comission")}
+            className="hover:bg-gray-700 px-2 py-2 rounded whitespace-nowrap"
+          >
+            User Commission
+          </button>
+          <button
             onClick={() => navigate("/admin/verify")}
             className="hover:bg-gray-700 px-2 py-2 rounded whitespace-nowrap"
           >

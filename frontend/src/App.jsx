@@ -25,6 +25,8 @@ import VerifyPort from "./pages/verifyport.jsx";
 import Payment from "./AdminPage/Payment.jsx";
 import AddCurrency from "./AdminPage/addcurrency.jsx";
 import HistoryPage from "./pages/history.jsx";
+import Commission from "./AdminPage/Commission.jsx";
+import Comdetail from "./AdminPage/Comdetail.jsx";
 
 const Layout = () => {
   return (
@@ -119,6 +121,22 @@ const router = createBrowserRouter([
           </RequireAuth>
         )
       },
+      {
+        path: "/admin/comission",
+        element: (
+          <RequireAuth allowedRoles={['admin']}>
+            <Commission/>
+          </RequireAuth>
+        )
+      },
+      {
+        path: "/admin/comdetail",
+        element: (
+          <RequireAuth allowedRoles={['admin']}>
+            <Comdetail/>
+          </RequireAuth>
+        )
+      }
     ]
   },
   {

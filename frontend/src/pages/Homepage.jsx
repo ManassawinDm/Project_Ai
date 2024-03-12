@@ -49,8 +49,8 @@ const filteredBots = bots.filter(
     (selectedCurrencies.length === 0 ||
       selectedCurrencies.some((currency) =>
         bot.currencies.includes(currency)))
+        
 );
-
   // Call this function when a user clicks the download button
   const handleDownloadBot = (bot) => {
     const downloadUrl = `http://localhost:8800/${bot.bot}`;

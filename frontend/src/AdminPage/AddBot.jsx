@@ -115,7 +115,6 @@ useEffect(() => {
     try {
       const response = await axios.get('http://localhost:8800/api/user/currencies');
       setCurrencies(response.data.currencies);
-      // console.log(currencies)
     } catch (error) {
       console.error('Error fetching currencies:', error);
     }

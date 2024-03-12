@@ -14,7 +14,7 @@ function QA() {
     {/* Centered headings */}
     <div className="text-center mb-4">
       <h1 className="text-5xl font-bold mb-6">Q&A</h1>
-      <h2 className="text-3xl  mb-10 text-[#00df9a] font-bold mb-4">What is a trading bot?</h2>
+      <h2 className="text-3xl mb-10 text-[#00df9a] font-bold mb-4">What is a trading bot?</h2>
      
     </div>
 

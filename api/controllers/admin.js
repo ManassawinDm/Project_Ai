@@ -3,6 +3,7 @@ const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const fs = require('fs');
 const path = require('path');
+const { json } = require("express");
 // const slipReject = async (req, res) => {
 //   const { slipId } = req.params;
 //   const { port_number } = req.body;
@@ -242,6 +243,38 @@ const deletecurrency = async (req, res) => {
   });
 };
 
+const fetchCommission = (req, res) => {
+  const q = "SELECT account.email, ports.port_number, SUM(transaction.Commission) AS totalCommission FROM account JOIN ports ON account.account_id = ports.account_id JOIN transaction ON ports.port_id = transaction.port_id";
+  
+  db.query(q, (err, data) => {
+    try {
+      if (err) return res.status(500).json({ error: err }); 
+
+      res.status(200).json(data); 
+
+    } catch(err) {
+      res.status(500).json({ error: err });
+    }
+  });
+};
+
+const fetchCommissiondetail = (req, res) => {
+  const portNumber = req.body.port
+  const q = "SELECT transaction.Date,transaction.Commission,transaction.Status FROM transaction JOIN ports ON transaction.port_id = ports.port_id WHERE ports.port_number = ?";
+
+  db.query(q,portNumber,(err,data)=>{
+    try{
+      if(err) return res.status(500).json({message:err})
+
+      res.status(200).json(data)
+
+    }catch(err){
+      res.status(500).json({message:err})
+    }
+  })
+};
+
+
 
 module.exports = {
   generateQRCode,
@@ -249,5 +282,7 @@ module.exports = {
   approveSlip,
   rejectSlip,
   deleteSlip,
-  deletecurrency
+  deletecurrency,
+  fetchCommission,
+  fetchCommissiondetail
 };
