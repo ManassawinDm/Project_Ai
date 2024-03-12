@@ -57,23 +57,23 @@ function Payment() {
   }
 
   return (
-    <div className="container mx-auto mt-8">
-      <h2 className="text-xl font-semibold mb-6 text-center">Payment Slips</h2>
+    <div className="container mx-auto mt-8 text-white">
+      <h2 className="text-xl font-semibold mb-6 text-center text-[#00df9a]">Payment Slips</h2>
       {slips.length > 0 ? (
         <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
-          <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
+          <table className=" table-auto w-full whitespace-no-wrap bg-[#1a222c] table-striped relative">
             <thead>
-              <tr className="text-center bg-green-100">
-                <th className="border px-4 py-2 text-green-600">Name</th>
-                <th className="border px-4 py-2 text-green-600">Photo</th>
-                <th className="border px-4 py-2 text-green-600">Check</th>
+              <tr className="text-center bg-[#313d4a]">
+                <th className=" px-4 py-2 text-[#00df9a]">Name</th>
+                <th className="px-4 py-2 text-[#00df9a]">Photo</th>
+                <th className="px-4 py-2 text-[#00df9a]">Check</th>
               </tr>
             </thead>
             <tbody>
               {slips.map((slip) => (
-                <tr key={slip.id} className="text-center border-b">
-                  <td className="border px-4 py-2">{slip.name}</td>
-                  <td className="border px-4 py-2">
+                <tr key={slip.id} className="text-center ">
+                  <td className=" px-4 py-2">{slip.name}</td>
+                  <td className="px-4 py-2">
                     <div className="flex justify-center">
                       <img
                         src={`http://localhost:8800/${slip.filePath}`}
@@ -84,7 +84,7 @@ function Payment() {
                       />
                     </div>
                   </td>
-                  <td className="border px-4 py-2">
+                  <td className="px-4 py-2">
                     <div className="flex justify-center items-center space-x-2">
                       <svg
                         onClick={() => handleVerify(slip.uploadslip_id, slip.transactions)}

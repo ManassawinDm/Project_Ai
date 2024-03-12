@@ -16,7 +16,6 @@ FROM bots b
 LEFT JOIN bot_currencies bc ON b.bot_id = bc.bot_id
 LEFT JOIN currencies c ON bc.currency_id = c.id
 GROUP BY b.bot_id, b.name, b.description, b.bot_path, b.image_path,b.backtest_image_path;
-
 `;
 
 db.query(query, (err, results) => {

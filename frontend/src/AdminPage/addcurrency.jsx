@@ -110,9 +110,9 @@ const handleSubmit = async (e) => {
 
 
   return (
-<div className="container mx-auto px-4 mt-8 sm:max-w-lg lg:max-w-full" style={{ position: 'relative' }}>
+<div className="container mx-auto px-4 mt-8 sm:max-w-lg lg:max-w-full text-white" style={{ position: 'relative' }} >
   <ToastContainer/>
-  <h2 className="text-xl font-semibold text-center mb-6">Add Currency</h2>
+  <h2 className="text-xl font-semibold text-center mb-6 text-[#00df9a]">Add Currency</h2>
   {message && (
     <div className={`text-center mb-4 ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
       {message}
@@ -120,7 +120,7 @@ const handleSubmit = async (e) => {
   )}
   <form onSubmit={handleSubmit} className="mx-auto space-y-4">
     <div className="form-group">
-      <label htmlFor="currencyName" className="block text-lg font-medium text-gray-700">
+      <label htmlFor="currencyName" className="block text-lg font-medium text-[#00df9a]">
         Currency Name
       </label>
       <input
@@ -135,7 +135,7 @@ const handleSubmit = async (e) => {
     </div>
 
     <div className="form-group">
-      <label htmlFor="currencyImage" className="block text-lg font-medium text-gray-700">
+      <label htmlFor="currencyImage" className="block text-lg font-medium text-[#00df9a]">
         Currency Image
       </label>
       <input
@@ -158,14 +158,14 @@ const handleSubmit = async (e) => {
   </form>
   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     {currencies.map((currency) => (
-      <div key={currency.id} className="bg-white p-4 shadow rounded-lg flex flex-col items-center">
+      <div key={currency.id} className="bg-[#1a222c] p-4 shadow rounded-lg flex flex-col items-center">
         <img
           src={`http://localhost:8800/${currency.imagePath}`}
           alt={currency.name}
           className="w-20 h-20 object-cover mb-2"
         />
         <h5 className="text-lg font-bold">{currency.name}</h5>
-        <p className="text-sm text-gray-600">{new Date(currency.dateAdded).toLocaleDateString()}</p>
+        <p className="text-sm text-[#00df9a]">{new Date(currency.dateAdded).toLocaleDateString()}</p>
         {/* Delete Button */}
         <button
   onClick={() => handleOpenDeleteDialog(currency.id)}

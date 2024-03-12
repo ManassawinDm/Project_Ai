@@ -9,7 +9,10 @@ export default {
       backgroundImage: {
         'stupidgraph': "url('./src/assets/graph.jpg')",
         'downloadbot': "url('./src/assets/downloadbot.png')",
-      }
+      },
+      colors: {
+        customDark: '#000300',
+      },
     }
   },
   plugins: [],

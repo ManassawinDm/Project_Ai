@@ -275,31 +275,31 @@ const [currentImageURL, setCurrentImageURL] = useState('');
 
 
   return (
-    <div className="container mx-auto px-4 mt-8">
+    <div className="container mx-auto px-4 mt-8 text-white">
        <ToastContainer />
-    <h2 className="text-xl font-semibold text-center mb-6">Add Bot</h2>
-    <form onSubmit={handleSubmit} className="mx-auto space-y-4">
+    <h2 className="text-xl font-semibold text-center mb-6 text-[#00df9a]">Add Bot</h2>
+    <form onSubmit={handleSubmit} className="mx-auto space-y-4 ">
     <div className="form-group">
-    <label htmlFor="name" className="block text-lg font-medium text-gray-700">
+    <label htmlFor="name" className="block text-lg font-medium text-[#00df9a]" >
           Bot Image
         </label>
           <input
             id="upload-img"
             type="file"
-            className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+            className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 text-black"
             onChange={handleImgFileChange}
             ref={imgFileInputRef} 
             accept="image/*"
           />
-          <span className="ml-4 text-sm text-gray-500">{selectedImgFile ? selectedImgFile.name : 'No image selected'}</span>
+          <span className="ml-4 text-sm text-white">{selectedImgFile ? selectedImgFile.name : 'No image selected'}</span>
         </div>
       <div className="form-group">
-        <label htmlFor="name" className="block text-lg font-medium text-gray-700">
+        <label htmlFor="name" className="block text-lg font-medium text-[#00df9a]">
           Bot Name
         </label>
         <input
           type="text"
-          className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+          className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
           placeholder="Enter bot name"
           required
           value={name}
@@ -308,11 +308,11 @@ const [currentImageURL, setCurrentImageURL] = useState('');
       </div>
 
       <div className="form-group">
-        <label htmlFor="description" className="block text-lg font-medium text-gray-700">
+        <label htmlFor="description" className="block text-lg font-medium text-[#00df9a]">
           Description
         </label>
         <textarea
-          className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+          className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
           rows="3"
           placeholder="Enter bot description"
           required
@@ -345,7 +345,7 @@ const [currentImageURL, setCurrentImageURL] = useState('');
   </Select>
 </FormControl>
 <div className="form-group">
-  <label htmlFor="upload-backtest" className="block text-lg font-medium text-gray-700">
+  <label htmlFor="upload-backtest" className="block text-lg font-medium text-[#00df9a]">
     Upload Backtest Image
   </label>
   <input
@@ -356,12 +356,12 @@ const [currentImageURL, setCurrentImageURL] = useState('');
     accept="image/*"
     className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
   />
-  <span className="ml-4 text-sm text-gray-500">{selectedBacktestFile ? selectedBacktestFile.name : 'No image selected'}</span>
+  <span className="ml-4 text-sm text-white">{selectedBacktestFile ? selectedBacktestFile.name : 'No image selected'}</span>
 </div>
 
 
         <div className="form-group">
-  <label htmlFor="upload-bot" className="block text-lg font-medium text-gray-700">
+  <label htmlFor="upload-bot" className="block text-lg font-medium text-[#00df9a]">
     Upload Bot File
   </label>
   <input
@@ -372,7 +372,7 @@ const [currentImageURL, setCurrentImageURL] = useState('');
     accept=".mq4, .ex4, .mq5, .ex5"
     className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
   />
-  <span className="ml-4 text-sm text-gray-500">{selectedBotFile ? selectedBotFile.name : 'No file selected'}</span>
+  <span className="ml-4 text-sm text-white">{selectedBotFile ? selectedBotFile.name : 'No file selected'}</span>
 </div>
 
       <button
@@ -383,10 +383,10 @@ const [currentImageURL, setCurrentImageURL] = useState('');
       </button>
     </form>
 
-    <h2 className="text-xl font-semibold text-center mb-6 mt-12">Available Bots</h2>
+    <h2 className="text-xl font-semibold text-center mb-6 mt-12 text-[#00df9a]">Available Bots</h2>
     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {bots.map((bot) => (
-        <div key={bot.id} className="bg-white p-4 shadow rounded-lg flex flex-col items-center">
+        <div key={bot.id} className="bg-[#1a222c] p-4 shadow rounded-lg flex flex-col items-center">
           <img
             src={`http://localhost:8800/${bot.image}`}
             alt={bot.name}
@@ -394,7 +394,7 @@ const [currentImageURL, setCurrentImageURL] = useState('');
           />
           <h5 className="text-lg font-bold">{bot.name}</h5>
           <p className="text-sm">{bot.description}</p>
-          <p className="text-sm text-gray-600">Currencies: {bot.currencies?.join(', ') ?? ''}</p>
+          <p className="text-sm text-[#00df9a]">Currencies: {bot.currencies?.join(', ') ?? ''}</p>
           <button
       onClick={() => handleImageClick(`http://localhost:8800/${bot.backtest}`)} 
         className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"

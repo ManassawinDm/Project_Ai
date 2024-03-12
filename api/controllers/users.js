@@ -438,8 +438,6 @@ const updatetransaction = async (req, res) => {
             console.error('Error fetching transactions:', error);
             return res.status(500).json({ message: 'Error fetching transactions from the database.' });
         }
-
-        console.log(transactions)
         res.status(200).json({ transactions });
     });
 };

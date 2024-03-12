@@ -53,22 +53,22 @@ function VerifyPort() {
 
 
   return (
-    <div className="container mx-auto mt-8">
+    <div className="container mx-auto mt-8 text-white">
 
-      <h2 className="text-xl font-semibold mb-6 text-center">Verify User Ports</h2>
-      <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
-        <table className="w-full table-auto bg-white">
-          <thead className="bg-green-500 text-white">
+      <h2 className="text-xl font-semibold mb-6 text-center text-[#00df9a]">Verify User Ports</h2>
+      <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative ">
+        <table className="w-full table-auto bg-[#1a222c]">
+          <thead className="bg-[#313d4a] text-white">
             <tr>
-              <th className="px-4 py-2">E-mail</th>
-              <th className="px-4 py-2">Port Number</th>
-              <th className="px-4 py-2">Photo</th>
-              <th className="px-4 py-2">Actions</th>
+              <th className="px-4 py-2 text-[#00df9a]">E-mail</th>
+              <th className="px-4 py-2 text-[#00df9a]">Port Number</th>
+              <th className="px-4 py-2 text-[#00df9a]">Photo</th>
+              <th className="px-4 py-2 text-[#00df9a]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {verifyData.map(data => (
-              <tr key={data.id} className="border-t border-gray-200 text-center">
+              <tr key={data.id} className=" border-gray-200 text-center">
                 <td className="px-4 py-2">{data.accountEmail}</td>
                 <td className="px-4 py-2">{data.portNumber}</td>
                 <td className="px-4 py-2">

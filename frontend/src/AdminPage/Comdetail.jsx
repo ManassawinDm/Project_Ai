@@ -24,35 +24,35 @@ function Comdetail() {
   }, []);
 
   return (
-    <div className="container mx-auto mt-8">
+    <div className="container mx-auto mt-8 text-white">
       {data.length > 0 ? (
         <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
-            <p className=" text-lg font-bold">User Commission {port}</p>
-          <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
+            <p className=" text-lg font-bold text-[#00df9a]">User Commission {port}</p>
+          <table className="table-auto w-full whitespace-no-wrap bg-[#1a222c] table-striped relative">
             <thead>
-              <tr className="text-center bg-green-500">
-                <th className="border px-4 py-2 text-white ">
+              <tr className="text-center bg-[#313d4a]">
+                <th className="px-4 py-2 text-white ">
                   Transaction_num
                 </th>
-                <th className="border px-4 py-2 text-white">Date</th>
-                <th className="border px-4 py-2 text-white">Commission</th>
-                <th className="border px-4 py-2 text-white">Status</th>
+                <th className="px-4 py-2 text-[#00df9a]">Date</th>
+                <th className="px-4 py-2 text-[#00df9a]">Commission</th>
+                <th className="px-4 py-2 text-[#00df9a]">Status</th>
               </tr>
             </thead>
             <tbody>
               {data.map((item, index) => (
-                <tr key={index} className="text-center border-b">
-                  <td className="border px-4 py-2">{index + 1}</td>
-                  <td className="border px-4 py-2">{item.Date}</td>
-                  <td className="border px-4 py-2">{item.Commission}</td>
-                  <td className="border px-4 py-2">
+                <tr key={index} className="text-center">
+                  <td className=" px-4 py-2 ">{index + 1}</td>
+                  <td className="px-4 py-2">{item.Date}</td>
+                  <td className="px-4 py-2">{item.Commission}</td>
+                  <td className="px-4 py-2">
                     <span
                       className={`font-bold py-1 px-3 rounded ${
                         item.Status === "0"
                           ? "text-yellow-600"
                           : item.Status === "1"
-                          ? "text-green-700"
-                          : "text-red-700"
+                          ? "text-[#00df9a]"
+                          : "text-red-600"
                       }`}
                     >
                       {item.Status === "0"

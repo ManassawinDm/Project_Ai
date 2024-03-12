@@ -32,25 +32,25 @@ function Commission() {
   // If not, you need to define these functions based on what they are supposed to do
 
   return (
-    <div className="container mx-auto mt-8">
+    <div className="container mx-auto mt-8 text-white">
       {data.length > 0 ? (
         <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
-          <table className="border-collapse table-auto w-full whitespace-no-wrap bg-white table-striped relative">
+          <table className="table-auto w-full whitespace-no-wrap bg-[#1a222c] table-striped relative">
             <thead>
-              <tr className="text-center bg-green-500">
-                <th className="border px-4 py-2 text-white ">Email</th>
-                <th className="border px-4 py-2 text-white">Port Number</th>
-                <th className="border px-4 py-2 text-white">Total Commission</th>
-                <th className="border px-4 py-2 text-white">Details</th>
+              <tr className="text-center bg-[#313d4a]">
+                <th className="px-4 py-2 text-[#00df9a] ">Email</th>
+                <th className="px-4 py-2 text-[#00df9a]">Port Number</th>
+                <th className="px-4 py-2 text-[#00df9a]">Total Commission</th>
+                <th className="px-4 py-2 text-[#00df9a]">Details</th>
               </tr>
             </thead>
             <tbody>
               {data.map((item,index) => (
-                <tr key={index} className="text-center border-b">
-                  <td className="border px-4 py-2">{item.email}</td>
-                  <td className="border px-4 py-2">{item.port_number}</td>
-                  <td className="border px-4 py-2">{item.totalCommission}</td>
-                  <td className="border px-4 py-2">
+                <tr key={index} className="text-center ">
+                  <td className="px-4 py-2">{item.email}</td>
+                  <td className="px-4 py-2">{item.port_number}</td>
+                  <td className="px-4 py-2">{item.totalCommission}</td>
+                  <td className="px-4 py-2">
                     <button
                       onClick={()=>handleDetail(item.port_number)}
                       className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
