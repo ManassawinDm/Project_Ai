@@ -52,11 +52,15 @@ const storageForport = multer.diskStorage({
             case 'verificationImage':
                 uploadPath = path.resolve(__dirname, '../public/botimage');
                 break;
+            case 'backtestImage':
+                uploadPath = path.resolve(__dirname, '../public/backtestimage');
+                break;
         }
         fs.mkdirSync(uploadPath, { recursive: true });
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
+       
         cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
@@ -202,83 +206,89 @@ const uploadPortHandler = (req, res) => {
 }
 
 
-    const botAndImageUploadHandler = (req, res) => {
-        uploadBotandImage.fields([
-            { name: 'bot', maxCount: 1 },
-            { name: 'verificationImage', maxCount: 1 }
-        ])(req, res, (error) => {
-            if (error) {
-                return res.status(500).json({ message: "Error uploading files", error: error.message });
+const botAndImageUploadHandler = (req, res) => {
+    uploadBotandImage.fields([
+        { name: 'bot', maxCount: 1 },
+        { name: 'verificationImage', maxCount: 1 },
+        { name: 'backtestImage', maxCount: 1 } // Add this line to accept a backtestImage
+    ])(req, res, (error) => {
+        if (error) {
+            return res.status(500).json({ message: "Error uploading files", error: error.message });
+        }
+
+        if (!req.files['bot'] || !req.files['verificationImage'] || !req.files['backtestImage']) {
+            return res.status(400).send("Bot file, verification image, and backtest image must all be uploaded.");
+        }
+
+        const botFile = req.files['bot'][0];
+        const imageFile = req.files['verificationImage'][0];
+        const backtestImageFile = req.files['backtestImage'][0]; // Retrieve the backtest image file
+        const { name, description, selectedCurrencies } = req.body;
+
+        // Generate relative file paths for each file
+        const botFilePath = path.relative(__dirname, botFile.path);
+        const imageFilePath = path.relative(__dirname, imageFile.path);
+        const backtestImagePath = path.relative(__dirname, backtestImageFile.path); // Path for the backtest image
+
+        console.log(JSON.parse(selectedCurrencies));
+        // Start database transaction
+        db.beginTransaction((transactionErr) => {
+            if (transactionErr) {
+                return res.status(500).json({ message: "Error starting transaction", error: transactionErr.message });
             }
-    
-            if (!req.files['bot'] || !req.files['verificationImage']) {
-                return res.status(400).send("Bot file and image must both be uploaded.");
-            }
-    
-            const botFile = req.files['bot'][0];
-            const imageFile = req.files['verificationImage'][0];
-            const { name, description, selectedCurrencies } = req.body;
-    
-            // Generate relative file paths
-            const botFilePath = path.relative(__dirname, botFile.path);
-            const imageFilePath = path.relative(__dirname, imageFile.path);
-            console.log(JSON.parse(selectedCurrencies))
-            // Start database transaction
-            db.beginTransaction((transactionErr) => {
-                if (transactionErr) {
-                    return res.status(500).json({ message: "Error starting transaction", error: transactionErr.message });
+
+            // Insert bot into database with the path for the backtest image
+            const insertQuery = `
+                INSERT INTO bots (name, description, bot_path, image_path, backtest_image_path)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+            db.query(insertQuery, [name, description, botFilePath, imageFilePath, backtestImagePath], (insertErr, insertResult) => {
+                if (insertErr) {
+                    db.rollback(() => {
+                        console.error("Database insert error:", insertErr);
+                        return res.status(500).send("Internal Server Error when inserting bot, images.");
+                    });
+                    return;
                 }
-    
-                // Insert bot into database
-                const insertQuery = `
-                    INSERT INTO bots (name, description, bot_path, image_path)
-                    VALUES (?, ?, ?, ?)
-                `;
-                db.query(insertQuery, [name, description, botFilePath, imageFilePath], (insertErr, insertResult) => {
-                    if (insertErr) {
+
+                const botId = insertResult.insertId;
+                // Insert into bot_currencies
+                const currenciesInsertQuery = 'INSERT INTO bot_currencies (bot_id, currency_id) VALUES ?';
+                const currenciesValues = JSON.parse(selectedCurrencies).map(currencyId => [botId, currencyId]);
+                
+                db.query(currenciesInsertQuery, [currenciesValues], (currenciesErr, currenciesResult) => {
+                    if (currenciesErr) {
                         db.rollback(() => {
-                            console.error("Database insert error:", insertErr);
-                            return res.status(500).send("Internal Server Error when inserting bot and image.");
+                            console.error('Error inserting bot-currency relationship:', currenciesErr);
+                            return res.status(500).json({ message: "Failed to associate bot with currencies" });
                         });
                         return;
                     }
-    
-                    const botId = insertResult.insertId;
-                    // Insert into bot_currencies
-                    const currenciesInsertQuery = 'INSERT INTO bot_currencies (bot_id, currency_id) VALUES ?';
-                    const currenciesValues = JSON.parse(selectedCurrencies).map(currencyId => [botId, currencyId]);
-                    
-                    db.query(currenciesInsertQuery, [currenciesValues], (currenciesErr, currenciesResult) => {
-                        if (currenciesErr) {
+
+                    db.commit((commitErr) => {
+                        if (commitErr) {
                             db.rollback(() => {
-                                console.error('Error inserting bot-currency relationship:', currenciesErr);
-                                return res.status(500).json({ message: "Failed to associate bot with currencies" });
+                                console.error('Error committing transaction:', commitErr);
+                                return res.status(500).send('Failed to commit transaction');
                             });
                             return;
                         }
-    
-                        db.commit((commitErr) => {
-                            if (commitErr) {
-                                db.rollback(() => {
-                                    console.error('Error committing transaction:', commitErr);
-                                    return res.status(500).send('Failed to commit transaction');
-                                });
-                                return;
-                            }
-    
-                            res.json({
-                                success: true,
-                                message: "Bot, image, and currency associations uploaded successfully",
-                                botFilePath: botFilePath,
-                                imageFilePath: imageFilePath,
-                                botId: botId
-                            });
+
+                        res.json({
+                            success: true,
+                            message: "Bot, images, and currency associations uploaded successfully",
+                            botFilePath: botFilePath,
+                            imageFilePath: imageFilePath,
+                            backtestImagePath: backtestImagePath, // Include backtest image path in response
+                            botId: botId
                         });
                     });
                 });
             });
         });
-    };
+    });
+};
+
     
     const CurrencyUploadHandler = (req, res) => {
         uploadCurrencyImage(req, res, (error) => {

@@ -11,8 +11,11 @@ import InputLabel from '@mui/material/InputLabel';
 import Checkbox from '@mui/material/Checkbox';
 import ListItemText from '@mui/material/ListItemText';
 import FormControl from '@mui/material/FormControl';
+import Imageviewr from '../component/imageview';
 function Homepage() {
-
+  const [isBacktestModalOpen, setIsBacktestModalOpen] = useState(false);
+  const [currentBacktestImage, setCurrentBacktestImage] = useState('');
+  
   const [bots, setBots] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCurrencies, setSelectedCurrencies] = useState([]);
@@ -61,6 +64,12 @@ const filteredBots = bots.filter(
     link.click();
     link.remove();
   };
+
+  const handleViewBacktest = (image) => {
+    setCurrentBacktestImage(`http://localhost:8800/${image}`);
+    setIsBacktestModalOpen(true);
+  };
+  
   return (
     <div className="text-white bg-[#000300]">
     <div className="container mx-auto p-6 ">
@@ -129,8 +138,44 @@ const filteredBots = bots.filter(
 
         <div className="flex flex-wrap   items-center justify-between gap-4">
           <div className="w-full  lg:w-auto">
-          <FormControl fullWidth style={{ minWidth: 200 }}  sx={{ m: 1, width: 300,bgcolor: '#000300', color: '#00df9a' }} className="my-4">
-  <InputLabel sx={{ color: '#00df9a' }} id="currency-select-label">Filter by Currency</InputLabel>
+          <FormControl 
+  fullWidth 
+  sx={{ 
+    m: 1, 
+    width: 300,
+    '& .MuiInputLabel-root': { // Target the label
+      color: '#00df9a',
+    }, 
+    '& .MuiOutlinedInput-root': { // Target the input outline
+      '& fieldset': {
+        borderColor: '#00df9a',
+      },
+      '&:hover fieldset': {
+        borderColor: '#00df9a',
+      },
+      '&.Mui-focused fieldset': { // Apply the color for focused state
+        borderColor: '#00df9a',
+      }
+    },
+    '& .MuiSvgIcon-root': { // Adjust icon color
+      color: '#00df9a',
+    },
+    '& .MuiCheckbox-root': { // Adjust checkbox color
+      color: '#00df9a',
+    },
+    '& .MuiButtonBase-root': { // Adjust dropdown button color on focus
+      '&:hover': {
+        bgcolor: 'transparent', // Maintain background color when hovered
+      },
+    },
+    '.MuiSelect-select': { // Color of the selected item text
+      color: '#00df9a',
+    },
+    bgcolor: '#000300', // Background color for the form control
+    color: '#00df9a', // Text color
+  }}
+>
+  <InputLabel id="currency-select-label">Filter by Currency</InputLabel>
   <Select
     labelId="currency-select-label"
     id="currency-select"
@@ -139,22 +184,36 @@ const filteredBots = bots.filter(
     onChange={handleCurrencyChange}
     input={<OutlinedInput label="Filter by Currency" />}
     renderValue={(selected) => selected.join(', ')}
-
+    MenuProps={{
+      PaperProps: {
+        sx: {
+          bgcolor: '#000300', // Background color for the dropdown
+          '& .MuiMenuItem-root': {
+            '&.Mui-selected': { // Background color for selected item
+              backgroundColor: 'rgba(0, 157, 154, 0.2)', // A lighter shade of the accent color for selected items
+            },
+            '&:hover': {
+              backgroundColor: 'rgba(0, 157, 154, 0.1)', // A very light shade of the accent color for hover
+            },
+          },
+        },
+      },
+    }}
   >
     {currencies.map((currency) => (
       <MenuItem key={currency.id} value={currency.name}>
-        <Checkbox  checked={selectedCurrencies.includes(currency.name)} />
-        {/* Display currency image before the name */}
+        <Checkbox checked={selectedCurrencies.includes(currency.name)} sx={{ color: '#00df9a', '&.Mui-checked': { color: '#00df9a' }}}/>
         <img
           src={`http://localhost:8800/${currency.imagePath}`} // Adjust the path as needed
           alt={currency.name}
           style={{ width: '24px', height: '24px', marginRight: '10px' }}
         />
-        <ListItemText  primary={currency.name} />
+        <ListItemText primary={currency.name} sx={{ color: '#00df9a' }}/>
       </MenuItem>
     ))}
   </Select>
 </FormControl>
+
           </div>
 
           <div className="w-full lg:w-auto">
@@ -180,6 +239,13 @@ const filteredBots = bots.filter(
              <h5 className="text-lg font-bold">{bot.name}</h5>
           <p className="text-sm">{bot.description}</p>
           <p className="text-sm text-gray-400">Currencies: {bot.currencies.join(', ')}</p>
+          <span
+  onClick={() => handleViewBacktest(bot.backtest)}
+  className="mt-2 text-green-600 px-4 py-2 cursor-pointer"
+>
+  View Backtest
+</span>
+
           <button
   className="mt-4 bg-green-500 text-white px-6 py-2 rounded shadow-lg hover:bg-green-600 transition-colors duration-200"
   onClick={() => handleDownloadBot(bot)}
@@ -190,6 +256,11 @@ const filteredBots = bots.filter(
           ))}
       </div>
     </div>
+    <Imageviewr
+  imageUrl={currentBacktestImage}
+  isOpen={isBacktestModalOpen}
+  handleClose={() => setIsBacktestModalOpen(false)}
+/>
       </div>
 
   );

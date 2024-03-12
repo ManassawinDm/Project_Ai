@@ -10,11 +10,12 @@ const getBots = (req, res) => {
     b.description,
     b.bot_path,
     b.image_path,
+    b.backtest_image_path,
     GROUP_CONCAT(c.name SEPARATOR ', ') AS currencies
 FROM bots b
 LEFT JOIN bot_currencies bc ON b.bot_id = bc.bot_id
 LEFT JOIN currencies c ON bc.currency_id = c.id
-GROUP BY b.bot_id, b.name, b.description, b.bot_path, b.image_path;
+GROUP BY b.bot_id, b.name, b.description, b.bot_path, b.image_path,b.backtest_image_path;
 
 `;
 
@@ -30,6 +31,7 @@ db.query(query, (err, results) => {
             description: row.description,
             image : row.image_path,
             bot : row.bot_path,
+            backtest : row.backtest_image_path,
             currencies: row.currencies ? row.currencies.split(', ') : []
         }));
         res.json(bots);

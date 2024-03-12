@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Imageviewr from '../component/imageview';
 
 function Payment() {
   const [slips, setSlips] = useState([]);
@@ -10,30 +11,6 @@ function Payment() {
   const handleImageClick = (imagePath) => {
     setCurrentImage(imagePath);
     setIsModalOpen(true);
-  };
-
-  const ImageModal = ({ isOpen, close, image }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" style={{ animation: 'fadeIn 0.3s' }}>
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden" style={{ maxWidth: '80vw', maxHeight: '80vh', transform: 'scale(1)', animation: 'scaleIn 0.3s' }}>
-          <div className="flex justify-center items-center p-4" style={{ height: '75vh' }}>
-            <img src={image} alt="Full Size" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-          </div>
-          <div className="text-right p-2">
-            <button
-              className="inline-block text-lg px-5 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 focus:outline-none transition duration-150 ease-in-out"
-              onClick={close}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-
-
-    );
   };
 
   const handleVerify = async (slipId, transactions) => {
@@ -81,11 +58,6 @@ function Payment() {
 
   return (
     <div className="container mx-auto mt-8">
-      <ImageModal
-        isOpen={isModalOpen}
-        close={() => setIsModalOpen(false)}
-        image={`http://localhost:8800/${currentImage}`}
-      />
       <h2 className="text-xl font-semibold mb-6 text-center">Payment Slips</h2>
       {slips.length > 0 ? (
         <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
@@ -108,7 +80,7 @@ function Payment() {
                         alt="Payment Slip"
                         style={{ width: 'auto', height: '100px' }}
                         className="cursor-pointer"
-                        onClick={() => handleImageClick(slip.filePath)}
+                        onClick={() => handleImageClick(`http://localhost:8800/${slip.filePath}`)} 
                       />
                     </div>
                   </td>
@@ -145,6 +117,7 @@ function Payment() {
               ))}
             </tbody>
           </table>
+          {isModalOpen && <Imageviewr imageUrl={currentImage} isOpen={isModalOpen} handleClose={() => setIsModalOpen(false)} />}
         </div>
       ) : (
         <div className="text-center">No payment slips found.</div>

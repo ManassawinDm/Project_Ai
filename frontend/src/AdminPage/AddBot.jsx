@@ -8,6 +8,7 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import ListItemText from '@mui/material/ListItemText';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Imageviewr from '../component/imageview';
 
 function AddBot() {
   const [selectedBotFile, setSelectedBotFile] = useState(null);
@@ -19,6 +20,34 @@ function AddBot() {
   const [bots, setBots] = useState([]);
   const botFileInputRef = useRef(null);
   const imgFileInputRef = useRef(null);
+  const [selectedBacktestFile, setSelectedBacktestFile] = useState(null);
+  const backtestFileInputRef = useRef(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentImage, setCurrentImage] = useState('');
+
+  const handleImageClick = (imagePath) => {
+    setCurrentImage(imagePath);
+    setIsModalOpen(true);
+  };
+
+  const handleBacktestFileChange = (event) => {
+    const file = event.target.files[0];
+  
+    if (file) {
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+  
+      const fileName = file.name;
+      const fileExtension = fileName.split('.').pop().toLowerCase();
+  
+      if (allowedExtensions.includes(`.${fileExtension}`)) {
+        setSelectedBacktestFile(file);
+      } else {
+        alert('Invalid backtest image file type. Please upload only .jpg, .jpeg, .png, or .gif files.');
+        event.target.value = '';
+      }
+    }
+  };
+
   
   const isAllSelected = 
   currencies.length > 0 && selectedCurrencies.length === currencies.length;
@@ -67,47 +96,51 @@ function AddBot() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(JSON.stringify(selectedCurrencies))
+  
     if (!selectedBotFile || !selectedImgFile || selectedCurrencies.length === 0) {
-      alert('Please select both bot file, image and currencies.');
+      alert('Please select both bot file, image, backtest image, and currencies.');
       return;
     }
-
-    // Combine both files and other data into a single FormData object
+  
     const formData = new FormData();
     formData.append('bot', selectedBotFile);
     formData.append('verificationImage', selectedImgFile);
+    formData.append('backtestImage', selectedBacktestFile); // Assuming you handle this on the backend
     formData.append('name', name);
     formData.append('description', description);
     formData.append('selectedCurrencies', JSON.stringify(selectedCurrencies));
-
+  
     try {
-      // Adjust the URL to the endpoint that handles bot and image uploads together
       const response = await axios.post("http://localhost:8800/api/file/upload/botAndImage", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      console.log(response.data);
-
-      alert("Upload successful");
-      if (response.status === 200) { // Or your success condition
-        // Reset file input fields
+  
+      if (response.status === 200) {
+        alert("Upload successful");
+  
+        const newBot = response.data;
+        
+        setBots(currentBots => [...currentBots, newBot]);
+  
+        // Reset form and state
         botFileInputRef.current.value = "";
         imgFileInputRef.current.value = "";
+        backtestFileInputRef.current.value = "";
+        setName('');
+        setDescription('');
+        setSelectedBotFile(null);
+        setSelectedImgFile(null);
+        setSelectedBacktestFile(null);
+        setSelectedCurrencies([]);
       }
-      
-      setName('');
-      setDescription('');
-      setSelectedBotFile(null);
-      setSelectedImgFile(null);
-      setSelectedCurrencies([]);
     } catch (error) {
       console.error(error);
       alert("Upload failed");
     }
-};
+  };
+  
 
 useEffect(() => {
   // Fetch currencies when the component mounts
@@ -165,6 +198,10 @@ const handleDeleteBot = async (botId) => {
     alert('Failed to delete bot.');
   }
 };
+
+const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+const [currentImageURL, setCurrentImageURL] = useState('');
+
 
   return (
     <div className="container mx-auto px-4 mt-8">
@@ -235,6 +272,20 @@ const handleDeleteBot = async (botId) => {
     ))}
   </Select>
 </FormControl>
+<div className="form-group">
+  <label htmlFor="upload-backtest" className="block text-lg font-medium text-gray-700">
+    Upload Backtest Image
+  </label>
+  <input
+    id="upload-backtest"
+    type="file"
+    onChange={handleBacktestFileChange}
+    ref={backtestFileInputRef}
+    accept="image/*"
+    className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+  />
+  <span className="ml-4 text-sm text-gray-500">{selectedBacktestFile ? selectedBacktestFile.name : 'No image selected'}</span>
+</div>
 
 
         <div className="form-group">
@@ -272,6 +323,12 @@ const handleDeleteBot = async (botId) => {
           <h5 className="text-lg font-bold">{bot.name}</h5>
           <p className="text-sm">{bot.description}</p>
           <p className="text-sm text-gray-600">Currencies: {bot.currencies.join(', ')}</p>
+          <button
+      onClick={() => handleImageClick(`http://localhost:8800/${bot.backtest}`)} 
+        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
+      >
+        BackTest
+      </button>
           <Button
               variant="contained"
               color="error"
@@ -283,6 +340,7 @@ const handleDeleteBot = async (botId) => {
         </div>
       ))}
     </div>
+    {isModalOpen && <Imageviewr imageUrl={currentImage} isOpen={isModalOpen} handleClose={() => setIsModalOpen(false)} />}
   </div>
 
     

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Imageviewr from '../component/imageview';
 
 function VerifyPort() {
   const [verifyData, setVerifyData] = useState([]);
@@ -49,30 +50,11 @@ function VerifyPort() {
     return <div>Loading...</div>;
   }
 
-  const ImageModal = ({ isOpen, close, image }) => {
-    if (!isOpen) return null;
-    console.log(image)
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-        <div className="bg-white rounded shadow p-4 max-w-lg max-h-full overflow-auto">
-          <img src={image} alt="Port verification" className="w-full h-auto" />
-          <div className="text-right mt-2">
-            <button onClick={close} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 transition ease-in-out duration-150">
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+
 
   return (
     <div className="container mx-auto mt-8">
-   <ImageModal
-        isOpen={isModalOpen}
-        close={() => setIsModalOpen(false)}
-        image={`${currentImage}`}
-      />
+
       <h2 className="text-xl font-semibold mb-6 text-center">Verify User Ports</h2>
       <div className="overflow-x-auto rounded-lg shadow overflow-y-auto relative">
         <table className="w-full table-auto bg-white">
@@ -104,6 +86,7 @@ function VerifyPort() {
             ))}
           </tbody>
         </table>
+        {isModalOpen && <Imageviewr imageUrl={currentImage} isOpen={isModalOpen} handleClose={() => setIsModalOpen(false)} />}
       </div>
     </div>
   );
