@@ -2,6 +2,10 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../component/authContext";
 import axios from "axios";
+import Script from "react-load-script";
+import { Alert, Snackbar } from "@mui/material";
+
+let OmiseCard;
 
 function Profile() {
   const navigate = useNavigate();
@@ -20,19 +24,39 @@ function Profile() {
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [totalCommission, setTotalCommission] = useState(0);
   const [selectionError, setSelectionError] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
 
   const calculateTotalCommission = () => {
-    return selectedTransactions.reduce((total, transactionId) => {
-      // Assuming transactions array is the correct reference here
-      const transaction = transactions.find(
-        (t) => t.Transaction_ID === transactionId
-      );
-      return total + parseFloat(transaction?.Commission || 0);
-    }, 0);
+    const totalCommissionInBaht = selectedTransactions.reduce(
+      (total, transactionId) => {
+        const transaction = transactions.find(
+          (t) => t.Transaction_ID === transactionId
+        );
+        return total + parseFloat(transaction?.Commission || 0);
+      },
+      0
+    );
+    return Math.round(totalCommissionInBaht);
   };
 
-  const handlePay = (event) => {
-    event.preventDefault(); // Prevent the default form submission behavior
+  const calculateTotalCommissionforOmise = () => {
+    const totalCommissionInBaht = selectedTransactions.reduce(
+      (total, transactionId) => {
+        const transaction = transactions.find(
+          (t) => t.Transaction_ID === transactionId
+        );
+        return total + parseFloat(transaction?.Commission || 0);
+      },
+      0
+    );
+    // Multiply by 100 to convert to the smallest currency unit and round to nearest integer
+    return Math.round(totalCommissionInBaht * 100);
+  };
+
+  const handlePayqrcode = (e) => {
+    e.preventDefault();
 
     const selectedPortData = portsData.find(
       (port) => port.port_number === selectedPortNumber
@@ -57,6 +81,12 @@ function Profile() {
     }
   };
 
+  const handlePay = (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+    creditCardConfigure();
+    omiseCardHandler();
+  };
+
   const handleSelectPort = async (event) => {
     const portNumber = event.target.value;
     setSelectedPortNumber(portNumber);
@@ -78,7 +108,7 @@ function Profile() {
   const fetchTransactions = async (portId) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/user/transactions/${portId}`
+        `http://localhost:8112/api/user/transactions/${portId}`
       );
       setTransactions(response.data.transactions);
     } catch (error) {
@@ -113,7 +143,7 @@ function Profile() {
     try {
       // Add port to the server
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/user/addPort`,
+        "http://localhost:8112/api/user/addPort",
         { portNumber: NewPort },
         {
           headers: {
@@ -133,7 +163,7 @@ function Profile() {
       formData.append("verificationImage", verificationImage);
       formData.append("portId", portId);
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/port`, formData, {
+      await axios.post("http://localhost:8112/api/file/upload/port", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -157,7 +187,7 @@ function Profile() {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/user/fetchUserData`,
+          "http://localhost:8112/api/user/fetchUserData",
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -165,7 +195,7 @@ function Profile() {
           }
         );
         setuserEmail(response.data.userData.email);
-        const portsDataFromResponse = response.data.userData.ports; // Assuming ports data includes port number and status
+        const portsDataFromResponse = response.data.userData.ports; 
         setPortsData(portsDataFromResponse);
         console.log(response.data.userData.ports);
         if (portsDataFromResponse.length > 0) {
@@ -185,7 +215,7 @@ function Profile() {
     } else {
       navigate("/login");
     }
-  }, [authToken, navigate]);
+  }, [authToken, snackbarSeverity, snackbarMessage]);
 
   const getStatusSymbol = (status) => {
     switch (status) {
@@ -195,7 +225,7 @@ function Profile() {
         return "✅";
     }
   };
-  const handleSelectAllTransactions = () => {
+  const handleSelectAllTransactions = (event) => {
     event.preventDefault();
     if (selectedTransactions.length === transactions.length) {
       setSelectedTransactions([]);
@@ -203,8 +233,83 @@ function Profile() {
       setSelectedTransactions(transactions.map((t) => t.Transaction_ID));
     }
   };
+
+  /*{Omise}*/
+  const handleLoadScript = () => {
+    OmiseCard = window.OmiseCard;
+    OmiseCard.configure({
+      publicKey: import.meta.env.VITE_REACT_APP_OMISE_PUBLIC_KEY,
+      currency: "THB",
+      frameLabel: "Trading Bot",
+      submitLabel: "Pay NOW",
+      buttonLabel: "Pay with Omise",
+    });
+  };
+
+  const creditCardConfigure = () => {
+    OmiseCard.configure({
+      defaultPaymentMethod: "credit_card",
+      otherPaymentMethods: [],
+    });
+    OmiseCard.configureButton("#credit-card");
+    OmiseCard.attach();
+  };
+
+  const omiseCardHandler = () => {
+    const selectedPortData = portsData.find(
+      (port) => port.port_number === selectedPortNumber
+    );
+    OmiseCard.open({
+      amount: calculateTotalCommissionforOmise(),
+      onCreateTokenSuccess: (token) => {
+        axios
+          .post("http://localhost:8112/api/omise/payment", {
+            email: userEmail,
+            amount: calculateTotalCommissionforOmise(),
+            port_id: selectedPortData.port_id,
+            selectedTransactions: selectedTransactions,
+            token: token,
+          })
+          .then((response) => {
+            setOpenSnackbar(true);
+            setSnackbarMessage("Payment successful");
+            setSnackbarSeverity("success");
+          })
+          .catch((error) => {
+            setOpenSnackbar(true);
+            setSnackbarMessage("Payment failed");
+            setSnackbarSeverity("error");
+          });
+      },
+      onFormClosed: () => {},
+    });
+  };
+
   return (
     <div className="flex flex-col items-center p-4 mt-8 text-white">
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert
+          onClose={() => setOpenSnackbar(false)}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            fontSize: "1.1rem",
+            "& .MuiAlert-icon": {
+              fontSize: "2rem",
+            },
+            boxShadow: 3,
+            bgcolor:
+              snackbarSeverity === "success" ? "limegreen" : "error.main",
+            color: "white",
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
       <div className="w-full max-w-4xl">
         <div className="flex flex-col md:flex-row">
           <div className=" border border-[#0f1419] bg-[#1a222c] rounded-lg shadow-lg p-8 mb-4 md:mr-4 md:flex-grow">
@@ -272,6 +377,10 @@ function Profile() {
           {/* New Form */}
           <div className=" border border-[#0f1419] bg-[#1a222c] rounded-lg shadow-lg p-8 md:flex-grow">
             <form className="space-y-6">
+              <Script
+                url="https://cdn.omise.co/omise.js"
+                onLoad={handleLoadScript}
+              />
               <select
                 id="portNumber"
                 className="w-full px-4 py-3 border border-[#0b0f12] rounded-lg bg-[#0f1419] text-[#00df9a]"
@@ -303,7 +412,10 @@ function Profile() {
                   </thead>
                   <tbody>
                     {transactions.map((transaction) => (
-                      <tr key={transaction.Transaction_ID} className="border-b border-[#00df9a]">
+                      <tr
+                        key={transaction.Transaction_ID}
+                        className="border-b border-[#00df9a]"
+                      >
                         <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
                           {new Date(transaction.Date).toLocaleDateString()}
                         </td>
@@ -330,7 +442,9 @@ function Profile() {
               </div>
               <div className="mt-4 flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Total Commission:</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    Total Commission:
+                  </h3>
                   <p className="text-xl font-bold text-white">
                     ฿{calculateTotalCommission().toFixed(2)}
                   </p>
@@ -348,11 +462,26 @@ function Profile() {
                 </div>
               )}
               <button
-                type="button" // Change to 'button' to prevent it from submitting a form
+                id="credit-card"
+                type="button"
                 onClick={handlePay}
+                disabled={calculateTotalCommission() <= 20} 
+                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                  calculateTotalCommission() <= 20
+                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                    : "bg-[#00df9a] hover:bg-[#44967c]"
+                }`}
+              >
+                {calculateTotalCommission() <= 20
+                  ? "Must pay a minimum of 20฿"
+                  : "Pay Commission"}
+              </button>
+              <button
+                type="button" // Change to 'button' to prevent it from submitting a form
+                onClick={handlePayqrcode}
                 className="w-full bg-[#00df9a] text-[#133f31] py-3 rounded-lg hover:bg-[#44967c] transition duration-300 ease-in-out"
               >
-                Pay Commission
+                Pay with qrcode
               </button>
             </form>
           </div>

@@ -6,6 +6,7 @@ const userRoutes = require('./routes/users');
 const fileRoutes = require('./routes/file');
 const botRoutes = require('./routes/bot');
 const adminRouter = require('./routes/admin.js');
+const omiseRouter = require('./routes/omise.js');
 const path = require('path');
 require('dotenv').config();
 
@@ -21,6 +22,7 @@ app.use('/api/file', fileRoutes);
 app.use('/api/bot',botRoutes)
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/api/admin', adminRouter);
+app.use('/api/omise', omiseRouter);
 
 
 
