@@ -147,7 +147,9 @@ def train_model(currency_name, end_date):
     model.compile(optimizer='adam', loss='mean_squared_error')
 
     # Train the model
-    model.fit(x_train, y_train, batch_size=1, epochs=1)
+    history = model.fit(x_train, y_train, batch_size=1, epochs=1)
+    mse = history.history['loss'][-1]  # Get the last MSE value from training
+    print(f"MSE:{mse}")
 
     try:
         # Save the model with currency name

@@ -165,8 +165,9 @@ const handleSubmit = async (e) => {
           className="w-20 h-20 object-cover mb-2"
         />
         <h5 className="text-lg font-bold">{currency.name}</h5>
+        <p className="text-sm text-[#ff4500]">MSE: {currency.mse}</p>
         <p className="text-sm text-[#00df9a]">{new Date(currency.dateAdded).toLocaleDateString()}</p>
-        {/* Delete Button */}
+        
         <button
   onClick={() => handleOpenDeleteDialog(currency.id)}
   className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"

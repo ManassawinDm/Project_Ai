@@ -321,21 +321,34 @@ const CurrencyUploadHandler = (req, res) => {
         }
   
         const pythonProcess = spawn('python', ['./python/train_model.py',name, new Date().toISOString().split('T')[0]]);
-        pythonProcess.on('close', (code) => {
-          if (code !== 0) {
-            return res.status(500).json({ message: "Failed to execute Python script" });
-          }
+        let outputData = '';
+          pythonProcess.stdout.on('data', (data) => {
+            outputData += data.toString();
+          });
+
+          pythonProcess.on('close', (code) => {
+            if (code !== 0) {
+              return res.status(500).json({ message: "Failed to execute Python script" });
+            }
+            
+            // Search for MSE in the output
+            const mseMatch = outputData.match(/MSE:(\d+\.\d+)/); // Adjust regex as necessary
+            let mse = null;
+            if (mseMatch && mseMatch.length > 1) {
+              mse = parseFloat(mseMatch[1]);
+              console.log("MSE:", mse); // For debugging, or use/store it as needed
+            }
           const imageFilePath = path.relative(__dirname, req.file.path);
           const currentDate = new Date().toISOString().split('T')[0];
-          const insertSql = "INSERT INTO currencies (name, imagePath, dateAdded) VALUES (?, ?, ?)";
-          db.query(insertSql, [name, imageFilePath, currentDate], (insertErr, insertResult) => {
-            if (insertErr) {
-              console.error('Database insert error:', insertErr);
-              return res.status(500).json({ message: "Failed to add currency" });
-            }
-            res.json({ message: "Currency added successfully and Python script executed." });
-          });
-        });
+          const insertSql = "INSERT INTO currencies (name, imagePath, dateAdded, mse) VALUES (?, ?, ?, ?)"; // Assume you've added a 'mse' column to your table
+  db.query(insertSql, [name, imageFilePath, currentDate, mse], (insertErr, insertResult) => {
+    if (insertErr) {
+      console.error('Database insert error:', insertErr);
+      return res.status(500).json({ message: "Failed to add currency" });
+    }
+    res.json({ message: "Currency added successfully, Python script executed, and MSE captured." });
+  });
+});
       });
     });
 };
