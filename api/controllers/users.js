@@ -357,7 +357,6 @@ const gettransaction = (req, res) => {
             console.error('Error fetching transactions:', error);
             res.status(500).json({ error: 'Internal server error' });
         } else {
-            console.log(`Transactions fetched successfully for port ID: ${portId} with status 0 or 2`);
             res.json({ transactions: rows });
         }
     });
