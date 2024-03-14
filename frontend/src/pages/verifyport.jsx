@@ -15,7 +15,7 @@ function VerifyPort() {
 
   const handleVerify = async (id) => {
     try {
-      await axios.post(`http://localhost:8800/api/user/verify/${id}`, { status: '1' });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/verify/${id}`, { status: '1' });
       setVerifyData(prevData => prevData.filter(data => data.id !== id));
     } catch (error) {
       console.error('Error verifying', error);
@@ -24,7 +24,7 @@ function VerifyPort() {
 
   const handleReject = async (id, file_id) => {
     try {
-      await axios.post(`http://localhost:8800/api/user/reject/${id}`, { file_id: file_id });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/reject/${id}`, { file_id: file_id });
       setVerifyData(prevData => prevData.filter(data => data.id !== id));
     } catch (error) {
       console.error('Error rejecting', error);
@@ -34,7 +34,7 @@ function VerifyPort() {
   useEffect(() => {
     const fetchVerifyData = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/api/user/check/port');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/check/port`);
         setVerifyData(response.data);
         setLoading(false);
       } catch (error) {
@@ -72,7 +72,7 @@ function VerifyPort() {
                 <td className="px-4 py-2">{data.accountEmail}</td>
                 <td className="px-4 py-2">{data.portNumber}</td>
                 <td className="px-4 py-2">
-                  <img src={`http://localhost:8800/${data.filepath}`} alt="Thumbnail" className="mx-auto cursor-pointer h-12 w-auto" onClick={() => handleImageClick(`http://localhost:8800/${data.filepath}`)} />
+                  <img src={`${import.meta.env.VITE_API_URL}/${data.filepath}`} alt="Thumbnail" className="mx-auto cursor-pointer h-12 w-auto" onClick={() => handleImageClick(`${import.meta.env.VITE_API_URL}/${data.filepath}`)} />
                 </td>
                 <td className="px-4 py-2 flex justify-center items-center gap-4">
                   <button onClick={() => handleVerify(data.id)} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">

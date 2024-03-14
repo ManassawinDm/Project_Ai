@@ -31,7 +31,7 @@ function Register() {
   
     try {
       // Submit the registration form
-      const res = await axios.post("http://localhost:8800/api/auth/register", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         email: input.email,
         password: input.password,
         portnumber: input.portnumber,
@@ -47,7 +47,7 @@ function Register() {
       formData.append("portId", portId);
   
       // Submit the verification image
-      const response = await axios.post("http://localhost:8800/api/file/upload/port", formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/port`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

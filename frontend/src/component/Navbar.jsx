@@ -277,7 +277,7 @@ function Navbar() {
         
         <li
           className="p-4 border-b border-gray-600 cursor-pointer"
-          onClick={() => navigate("/qa")}
+          onClick={() => navigate("/Q&A")}
         >
           Q&A
         </li>

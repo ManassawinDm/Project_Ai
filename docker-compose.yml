@@ -1,0 +1,66 @@
+# version: '3.3'
+# services:
+#   api:
+#     build: ./api
+#     container_name: backend
+#     image: backend
+#     ports:
+#       - '8112:8112'
+#     volumes:
+#       - ./api:/usr/src/app
+#       - node_modules:/usr/src/app/node_modules
+#       # - uploaded_images:/usr/src/app/public/UserProfile/acc_profile
+#     depends_on:
+#       - db
+#     env_file: 
+#       - ./api/.env
+
+#   frontend:
+#     build: ./frontend
+#     container_name: frontend
+#     image: frontend
+#     ports:
+#       - '8110:8110'
+#     volumes:
+#       - ./frontend:/usr/src/app
+#       - node_modules:/usr/src/app/node_modules
+#       # - uploaded_images:/usr/src/app/public/UserProfile/acc_profile
+#     stdin_open: true
+#     tty: true
+#     depends_on:
+#       - api
+#     env_file:
+#       - ./frontend/.env
+
+#   db:
+#     container_name: db
+#     image: mysql
+#     restart: always
+#     environment:
+#       MYSQL_ROOT_PASSWORD: MYSQL_ROOT_PASSWORD
+#       MYSQL_DATABASE: tradingbot
+#       MYSQL_USER: MYSQL_USER
+#       MYSQL_PASSWORD: MYSQL_PASSWORD
+#     ports:
+#       - "9906:3306"
+
+#   phpmyadmin:
+#     image: phpmyadmin/phpmyadmin
+#     ports:
+#       - "8000:80"
+#     restart: always
+#     environment:
+#       PMA_HOST: db
+#     depends_on:
+#       - db
+
+      
+# volumes:
+#   db_data: {}
+#   node_modules: {}
+#   # uploaded_images: {}
+
+# networks:
+#   default:
+#     name: shared_network
+#     driver: bridge

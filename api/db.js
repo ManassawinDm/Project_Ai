@@ -1,10 +1,11 @@
 const mysql = require('mysql');
+require('dotenv').config();
 
 const db = mysql.createConnection({
-  host: 'localhost', // This is typically 'localhost' if your database runs on the same server as your Node app
-  user: 'root', // Your database username
-  password: '', // Your database password
-  database: 'tradingbot' // The name of the database you want to connect to
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE
 });
 
 // Connect to the database

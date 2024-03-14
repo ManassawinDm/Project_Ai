@@ -25,9 +25,9 @@ useEffect(() => {
   const fetchBots = async () => {
     // Fetch bots and currencies on component mount
     try {
-      const botsResponse = await axios.get('http://localhost:8800/api/bot/getdata');
+      const botsResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/bot/getdata`);
       setBots(botsResponse.data);
-      const currenciesResponse = await axios.get('http://localhost:8800/api/user/currencies');
+      const currenciesResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/currencies`);
       setCurrencies(currenciesResponse.data.currencies);
       console.log(bots)
     } catch (error) {
@@ -56,7 +56,7 @@ const filteredBots = bots.filter(
 );
   // Call this function when a user clicks the download button
   const handleDownloadBot = (bot) => {
-    const downloadUrl = `http://localhost:8800/${bot.bot}`;
+    const downloadUrl = `${import.meta.env.VITE_API_URL}/${bot.bot}`;
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.setAttribute('download', bot.name); // This will download the file with the bot's name
@@ -65,9 +65,23 @@ const filteredBots = bots.filter(
     link.remove();
   };
 
-  const handleViewBacktest = (image) => {
-    setCurrentBacktestImage(`http://localhost:8800/${image}`);
-    setIsBacktestModalOpen(true);
+  const handleBackTestClick = async (backtest, image) => {
+    try {
+      // Send a request to the server endpoint with the backtest HTML and image paths
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/file/process-backtest`, {
+        backtestHtmlPath: backtest,
+        backtestImagePath: image,
+        URL : `${import.meta.env.VITE_API_URL}`
+      });
+  
+      // Assuming the server returns the URL to the modified HTML
+      const modifiedHtmlUrl = response.data.modifiedHtmlUrl;
+  
+      // Open the modified HTML in a new tab
+      window.open(modifiedHtmlUrl, '_blank');
+    } catch (error) {
+      console.error('Failed to process backtest:', error);
+    }
   };
   
   return (
@@ -204,7 +218,7 @@ const filteredBots = bots.filter(
       <MenuItem key={currency.id} value={currency.name}>
         <Checkbox checked={selectedCurrencies.includes(currency.name)} sx={{ color: '#00df9a', '&.Mui-checked': { color: '#00df9a' }}}/>
         <img
-          src={`http://localhost:8800/${currency.imagePath}`} // Adjust the path as needed
+          src={`${import.meta.env.VITE_API_URL}/${currency.imagePath}`} // Adjust the path as needed
           alt={currency.name}
           style={{ width: '24px', height: '24px', marginRight: '10px' }}
         />
@@ -232,19 +246,20 @@ const filteredBots = bots.filter(
       {filteredBots.map((bot) => (
             <div key={bot.id} className="bg-[#000300] p-4 shadow rounded-lg flex flex-col items-center">
               <img
-                src={`http://localhost:8800/${bot.image}`}
+                src={`${import.meta.env.VITE_API_URL}/${bot.image}`}
                 alt={bot.name}
                 className="w-32 h-32 object-cover rounded-full mb-4"
               />
              <h5 className="text-lg font-bold">{bot.name}</h5>
           <p className="text-sm">{bot.description}</p>
           <p className="text-sm text-gray-400">Currencies: {bot.currencies.join(', ')}</p>
-          <span
-  onClick={() => handleViewBacktest(bot.backtest)}
-  className="mt-2 text-green-600 px-4 py-2 cursor-pointer"
+          <button
+  onClick={() => handleBackTestClick(bot.backtesthtml,bot.backtest)} 
+  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
 >
-  View Backtest
-</span>
+  BackTest
+</button>
+
 
           <button
   className="mt-4 bg-green-500 text-white px-6 py-2 rounded shadow-lg hover:bg-green-600 transition-colors duration-200"

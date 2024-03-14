@@ -7,6 +7,7 @@ const fileRoutes = require('./routes/file');
 const botRoutes = require('./routes/bot');
 const adminRouter = require('./routes/admin.js');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
@@ -23,6 +24,6 @@ app.use('/api/admin', adminRouter);
 
 
 
-app.listen(8800, () => {
-    console.log("Server running on port 8800");
+app.listen(process.env.PORT, () => {
+    console.log("Server running on port 8112");
 });

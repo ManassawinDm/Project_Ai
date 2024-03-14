@@ -3,7 +3,7 @@ const path = require('path');
 const db = require('../db');
 const multer = require('multer');
 const { spawn } = require('child_process');
-
+require('dotenv').config();
 // Slip Upload Configuration
 const storageForSlip = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -55,15 +55,18 @@ const storageForport = multer.diskStorage({
             case 'backtestImage':
                 uploadPath = path.resolve(__dirname, '../public/backtestimage');
                 break;
+            case 'backtestHtml': // Handle the .htm file for the backtest report
+                uploadPath = path.resolve(__dirname, '../public/backtesthtml');
+                break;
         }
         fs.mkdirSync(uploadPath, { recursive: true });
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-       
         cb(null, `${Date.now()}-${file.originalname}`);
     }
-});
+  });
+  
 const storageForCurrency = multer.diskStorage({
     destination: (req, file, cb) => {
       const uploadPath = path.resolve(__dirname, '../public/currency');
@@ -210,25 +213,29 @@ const botAndImageUploadHandler = (req, res) => {
     uploadBotandImage.fields([
         { name: 'bot', maxCount: 1 },
         { name: 'verificationImage', maxCount: 1 },
-        { name: 'backtestImage', maxCount: 1 } // Add this line to accept a backtestImage
+        { name: 'backtestImage', maxCount: 1 },
+        { name: 'backtestHtml', maxCount: 1 } // Accept a backtestHtml file
     ])(req, res, (error) => {
         if (error) {
             return res.status(500).json({ message: "Error uploading files", error: error.message });
         }
 
-        if (!req.files['bot'] || !req.files['verificationImage'] || !req.files['backtestImage']) {
-            return res.status(400).send("Bot file, verification image, and backtest image must all be uploaded.");
+        // Ensure all files are uploaded, including the backtestHtml file
+        if (!req.files['bot'] || !req.files['verificationImage'] || !req.files['backtestImage'] || !req.files['backtestHtml']) {
+            return res.status(400).send("All files must be uploaded.");
         }
+    
 
         const botFile = req.files['bot'][0];
         const imageFile = req.files['verificationImage'][0];
-        const backtestImageFile = req.files['backtestImage'][0]; // Retrieve the backtest image file
+        const backtestImageFile = req.files['backtestImage'][0];
+        const backtestHtmlFile = req.files['backtestHtml'][0];
         const { name, description, selectedCurrencies } = req.body;
 
-        // Generate relative file paths for each file
         const botFilePath = path.relative(__dirname, botFile.path);
         const imageFilePath = path.relative(__dirname, imageFile.path);
-        const backtestImagePath = path.relative(__dirname, backtestImageFile.path); // Path for the backtest image
+        const backtestImagePath = path.relative(__dirname, backtestImageFile.path);
+        const backtestHtmlPath = path.relative(__dirname, backtestHtmlFile.path); // Path for the backtestHtml file
 
         console.log(JSON.parse(selectedCurrencies));
         // Start database transaction
@@ -239,10 +246,10 @@ const botAndImageUploadHandler = (req, res) => {
 
             // Insert bot into database with the path for the backtest image
             const insertQuery = `
-                INSERT INTO bots (name, description, bot_path, image_path, backtest_image_path)
-                VALUES (?, ?, ?, ?, ?)
-            `;
-            db.query(insertQuery, [name, description, botFilePath, imageFilePath, backtestImagePath], (insertErr, insertResult) => {
+            INSERT INTO bots (name, description, bot_path, image_path, backtest_image_path, backtest_html_path)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        db.query(insertQuery, [name, description, botFilePath, imageFilePath, backtestImagePath, backtestHtmlPath], (insertErr, insertResult) => {
                 if (insertErr) {
                     db.rollback(() => {
                         console.error("Database insert error:", insertErr);
@@ -252,10 +259,10 @@ const botAndImageUploadHandler = (req, res) => {
                 }
 
                 const botId = insertResult.insertId;
-                // Insert into bot_currencies
+                console.log(botId)
                 const currenciesInsertQuery = 'INSERT INTO bot_currencies (bot_id, currency_id) VALUES ?';
                 const currenciesValues = JSON.parse(selectedCurrencies).map(currencyId => [botId, currencyId]);
-                
+                console.log(currenciesValues)
                 db.query(currenciesInsertQuery, [currenciesValues], (currenciesErr, currenciesResult) => {
                     if (currenciesErr) {
                         db.rollback(() => {
@@ -333,6 +340,35 @@ const CurrencyUploadHandler = (req, res) => {
     });
 };
 
+const changeBacketestHTML = (req, res) => {
+    const { backtestHtmlPath, backtestImagePath, URL } = req.body;
+  
+    // Assuming these paths are relative to your server's public directory
+    const htmlFilePath = path.join(__dirname, '../public', backtestHtmlPath);
+    const imageFilePath = path.join(__dirname, '../public', backtestImagePath);
+  
+    fs.readFile(htmlFilePath, 'utf8', (err, htmlData) => {
+      if (err) {
+        console.error('Error reading HTML file:', err);
+        return res.status(500).send('Failed to load backtest HTML');
+      }
+      // Replace image src with the new path
+      const updatedHtmlData = htmlData.replace(/src="[^"]+"/g, `src="${URL}/${backtestImagePath}"`);
+
+      // Overwrite the original file
+      fs.writeFile(htmlFilePath, updatedHtmlData, 'utf8', (writeErr) => {
+        if (writeErr) {
+          console.error('Error writing modified HTML file:', writeErr);
+          return res.status(500).send('Failed to process backtest HTML');
+        }
+  
+        // Respond with the URL to the modified (now overwritten) HTML
+        const modifiedHtmlUrl = `${URL}/${backtestHtmlPath}`;
+        res.json({ modifiedHtmlUrl });
+      });
+    });
+}
+
       
 
 // Export handlers
@@ -340,6 +376,7 @@ module.exports = {
     uploadSlipHandler,
     uploadPortHandler,
     botAndImageUploadHandler,
-    CurrencyUploadHandler
+    CurrencyUploadHandler,
+    changeBacketestHTML
     
 };

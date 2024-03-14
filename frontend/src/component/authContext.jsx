@@ -24,7 +24,7 @@ export const AuthContextProvider = ({ children }) => {
 
   const login = async (input) => {
     try {
-      const response = await axios.post("http://localhost:8800/api/auth/login", input);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, input);
       const { token } = response.data;
       if (token) {
         localStorage.setItem("token", token);

@@ -19,7 +19,7 @@ const [currencyToDelete, setCurrencyToDelete] = useState(null);
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:8800/api/user/currencies');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/currencies`);
       setCurrencies(response.data.currencies);
     } catch (err) {
       setError('Failed to fetch currencies');
@@ -46,7 +46,7 @@ const [currencyToDelete, setCurrencyToDelete] = useState(null);
     if (currencyToDelete) {
       setIsLoading(true);
       try {
-        await axios.delete(`http://localhost:8800/api/admin/deletecurrencies/${currencyToDelete}`);
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/deletecurrencies/${currencyToDelete}`);
         const updatedCurrencies = currencies.filter(currency => currency.id !== currencyToDelete);
         setCurrencies(updatedCurrencies);
         toast.success('Currency deleted successfully.');
@@ -87,7 +87,7 @@ const handleSubmit = async (e) => {
 
 
   try {
-    const response = await axios.post('http://localhost:8800/api/file/addCurrency', formData, {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/file/addCurrency`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -128,7 +128,7 @@ const handleSubmit = async (e) => {
         type="text"
         value={currencyName}
         onChange={handleNameChange}
-        className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+        className="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
         placeholder="Enter currency name"
         required
       />
@@ -160,7 +160,7 @@ const handleSubmit = async (e) => {
     {currencies.map((currency) => (
       <div key={currency.id} className="bg-[#1a222c] p-4 shadow rounded-lg flex flex-col items-center">
         <img
-          src={`http://localhost:8800/${currency.imagePath}`}
+          src={`${import.meta.env.VITE_API_URL}/${currency.imagePath}`}
           alt={currency.name}
           className="w-20 h-20 object-cover mb-2"
         />

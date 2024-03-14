@@ -10,7 +10,7 @@ function Commission() {
   useEffect(() => {
     const fetchCommission = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/api/admin/fetchcommission');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/fetchcommission`);
         setData(response.data);
       } catch (error) {
         console.error('Error fetching commission data:', error);

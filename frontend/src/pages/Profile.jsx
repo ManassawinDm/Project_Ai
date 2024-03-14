@@ -78,7 +78,7 @@ function Profile() {
   const fetchTransactions = async (portId) => {
     try {
       const response = await axios.get(
-        `http://localhost:8800/api/user/transactions/${portId}`
+        `${import.meta.env.VITE_API_URL}/api/user/transactions/${portId}`
       );
       setTransactions(response.data.transactions);
     } catch (error) {
@@ -113,7 +113,7 @@ function Profile() {
     try {
       // Add port to the server
       const response = await axios.post(
-        "http://localhost:8800/api/user/addPort",
+        `${import.meta.env.VITE_API_URL}/api/user/addPort`,
         { portNumber: NewPort },
         {
           headers: {
@@ -133,7 +133,7 @@ function Profile() {
       formData.append("verificationImage", verificationImage);
       formData.append("portId", portId);
 
-      await axios.post("http://localhost:8800/api/file/upload/port", formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/port`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -157,7 +157,7 @@ function Profile() {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8800/api/user/fetchUserData",
+          `${import.meta.env.VITE_API_URL}/api/user/fetchUserData`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,

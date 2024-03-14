@@ -29,7 +29,8 @@ function AddBot() {
   const [currentImage, setCurrentImage] = useState('');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [botToDelete, setBotToDelete] = useState(null);
-  
+  const [selectedHtmlFile, setSelectedHtmlFile] = useState(null);
+  const htmlFileInputRef = useRef(null);
   const handleImageClick = (imagePath) => {
     setCurrentImage(imagePath);
     setIsModalOpen(true);
@@ -124,13 +125,14 @@ function AddBot() {
     const formData = new FormData();
     formData.append('bot', selectedBotFile);
     formData.append('verificationImage', selectedImgFile);
-    formData.append('backtestImage', selectedBacktestFile); // Assuming you handle this on the backend
+    formData.append('backtestImage', selectedBacktestFile); 
+    formData.append('backtestHtml', selectedHtmlFile);
     formData.append('name', name);
     formData.append('description', description);
     formData.append('selectedCurrencies', JSON.stringify(selectedCurrencies));
   
     try {
-      const response = await axios.post("http://localhost:8800/api/file/upload/botAndImage", formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/botAndImage`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -159,6 +161,9 @@ progress: undefined,
         setSelectedImgFile(null);
         setSelectedBacktestFile(null);
         setSelectedCurrencies([]);
+        htmlFileInputRef.current.value = "";
+        setSelectedHtmlFile(null);
+
       }else{
         toast.error("Upload failed ",{position: "top-center",
         autoClose: 1000,
@@ -187,7 +192,7 @@ useEffect(() => {
   // Fetch currencies when the component mounts
   const fetchCurrencies = async () => {
     try {
-      const response = await axios.get('http://localhost:8800/api/user/currencies');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/currencies`);
       setCurrencies(response.data.currencies);
     console.log(currencies)
     } catch (error) {
@@ -200,8 +205,9 @@ useEffect(() => {
 
 const fetchBots = async () => {
   try {
-    const response = await axios.get('http://localhost:8800/api/bot/getdata');
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/bot/getdata`);
     setBots(response.data);
+    console.log(bots)
   } catch (error) {
     console.error('Error fetching bots:', error);
   }
@@ -224,7 +230,7 @@ const handleCurrencyChange = (event) => {
 const handleDeleteBot = async () => {
   if (botToDelete) {
     try {
-      const response = await axios.delete(`http://localhost:8800/api/bot/${botToDelete}`);
+      const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/bot/${botToDelete}`);
       if (response.status === 200) {
         // Update the state to remove the deleted bot from the UI
         setBots(bots.filter(bot => bot.id !== botToDelete));
@@ -266,6 +272,33 @@ const handleDeleteBot = async () => {
       // Close the delete confirmation dialog regardless of outcome
       handleCloseDeleteDialog();
     }
+  }
+};
+const handleHtmlFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file && (file.type === "text/html" || file.name.endsWith('.htm'))) {
+    setSelectedHtmlFile(file);
+  } else {
+    alert('Invalid file type. Please upload only .html or .htm files.');
+    event.target.value = ''; // Reset the input value
+  }
+};
+const handleBackTestClick = async (backtest, image) => {
+  try {
+    // Send a request to the server endpoint with the backtest HTML and image paths
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/file/process-backtest`, {
+      backtestHtmlPath: backtest,
+      backtestImagePath: image,
+      URL : `${import.meta.env.VITE_API_URL}`
+    });
+
+    // Assuming the server returns the URL to the modified HTML
+    const modifiedHtmlUrl = response.data.modifiedHtmlUrl;
+
+    // Open the modified HTML in a new tab
+    window.open(modifiedHtmlUrl, '_blank');
+  } catch (error) {
+    console.error('Failed to process backtest:', error);
   }
 };
 
@@ -321,7 +354,42 @@ const [currentImageURL, setCurrentImageURL] = useState('');
         ></textarea>
       </div>
 
-      <FormControl fullWidth className="mt-4">
+      <FormControl 
+  fullWidth 
+  sx={{ 
+    m: 1, 
+    '& .MuiInputLabel-root': { // Target the label
+      color: '#00df9a',
+    }, 
+    '& .MuiOutlinedInput-root': { // Target the input outline
+      '& fieldset': {
+        borderColor: '#00df9a',
+      },
+      '&:hover fieldset': {
+        borderColor: '#00df9a',
+      },
+      '&.Mui-focused fieldset': { // Apply the color for focused state
+        borderColor: '#00df9a',
+      }
+    },
+    '& .MuiSvgIcon-root': { // Adjust icon color
+      color: '#00df9a',
+    },
+    '& .MuiCheckbox-root': { // Adjust checkbox color
+      color: '#00df9a',
+    },
+    '& .MuiButtonBase-root': { // Adjust dropdown button color on focus
+      '&:hover': {
+        bgcolor: 'transparent', // Maintain background color when hovered
+      },
+    },
+    '.MuiSelect-select': { // Color of the selected item text
+      color: '#00df9a',
+    },
+    bgcolor: '#000300', // Background color for the form control
+    color: '#00df9a', // Text color
+  }}
+>
   <InputLabel id="demo-multiple-checkbox-label">Currencies</InputLabel>
   <Select
     labelId="demo-multiple-checkbox-label"
@@ -331,19 +399,50 @@ const [currentImageURL, setCurrentImageURL] = useState('');
     onChange={handleCurrencyChange}
     input={<OutlinedInput label="Currencies" />}
     renderValue={(selected) => selected.map((id) => currencies.find((currency) => currency.id === id)?.name).join(', ')}
+    MenuProps={{
+      PaperProps: {
+        sx: {
+          bgcolor: '#000300', // Background color for the dropdown
+          '& .MuiMenuItem-root': {
+            '&.Mui-selected': { // Background color for selected item
+              backgroundColor: 'rgba(0, 157, 154, 0.2)', // A lighter shade of the accent color for selected items
+            },
+            '&:hover': {
+              backgroundColor: 'rgba(0, 157, 154, 0.1)', // A very light shade of the accent color for hover
+            },
+          },
+        },
+      },
+    }}
+
   >
     <MenuItem value="all">
-      <Checkbox checked={isAllSelected} onChange={handleSelectAllClick} />
-      <ListItemText primary="Select All" />
+      <Checkbox checked={isAllSelected} onChange={handleSelectAllClick}  sx={{ color: '#00df9a', '&.Mui-checked': { color: '#00df9a' }}} />
+      <ListItemText primary="Select All"sx={{ color: '#00df9a' }} />
     </MenuItem>
     {currencies.map((currency) => (
       <MenuItem key={currency.id} value={currency.id}>
-        <Checkbox checked={selectedCurrencies.includes(currency.id)} />
-        <ListItemText primary={currency.name} />
+        <Checkbox checked={selectedCurrencies.includes(currency.id)}  sx={{ color: '#00df9a', '&.Mui-checked': { color: '#00df9a' }}}/>
+        <ListItemText primary={currency.name} sx={{ color: '#00df9a' }}/>
       </MenuItem>
     ))}
   </Select>
 </FormControl>
+<div className="form-group">
+  <label htmlFor="upload-html" className="block text-lg font-medium text-[#00df9a]">
+    Upload Backtest HTML
+  </label>
+  <input
+    id="upload-html"
+    type="file"
+    onChange={handleHtmlFileChange}
+    ref={htmlFileInputRef}
+    accept=".html, .htm"
+    className="form-input mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+  />
+  <span className="ml-4 text-sm text-white">{selectedHtmlFile ? selectedHtmlFile.name : 'No file selected'}</span>
+</div>
+
 <div className="form-group">
   <label htmlFor="upload-backtest" className="block text-lg font-medium text-[#00df9a]">
     Upload Backtest Image
@@ -388,7 +487,7 @@ const [currentImageURL, setCurrentImageURL] = useState('');
       {bots.map((bot) => (
         <div key={bot.id} className="bg-[#1a222c] p-4 shadow rounded-lg flex flex-col items-center">
           <img
-            src={`http://localhost:8800/${bot.image}`}
+            src={`${import.meta.env.VITE_API_URL}/${bot.image}`}
             alt={bot.name}
             className="w-20 h-20 object-cover mb-2"
           />
@@ -396,11 +495,12 @@ const [currentImageURL, setCurrentImageURL] = useState('');
           <p className="text-sm">{bot.description}</p>
           <p className="text-sm text-[#00df9a]">Currencies: {bot.currencies?.join(', ') ?? ''}</p>
           <button
-      onClick={() => handleImageClick(`http://localhost:8800/${bot.backtest}`)} 
-        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
-      >
-        BackTest
-      </button>
+  onClick={() => handleBackTestClick(bot.backtesthtml,bot.backtest)} 
+  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
+>
+  BackTest
+</button>
+
       <Button
   variant="contained"
   color="error"

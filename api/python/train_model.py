@@ -1,5 +1,4 @@
 import argparse
-import pandas_datareader as web
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM

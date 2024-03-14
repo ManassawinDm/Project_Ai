@@ -17,7 +17,7 @@ function HistoryPage() {
     const fetchPorts = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8800/api/user/fetchUserData",
+          `${import.meta.env.VITE_API_URL}/api/user/fetchUserData`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -47,7 +47,7 @@ function HistoryPage() {
 
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8800/api/user/history/${selectedPortId}`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/history/${selectedPortId}`, {
           headers: { Authorization: `Bearer ${authToken}` }
         });
         setTransactions(response.data.transactions);

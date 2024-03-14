@@ -9,7 +9,7 @@ function Comdetail() {
     const fetchCommission = async () => {
       try {
         const response = await axios.post(
-          `http://localhost:8800/api/admin/fetchcommissiondetail`,
+          `${import.meta.env.VITE_API_URL}/api/admin/fetchcommissiondetail`,
           {
             port: port,
           }

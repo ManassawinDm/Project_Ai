@@ -15,9 +15,9 @@ function Payment() {
 
   const handleVerify = async (slipId, transactions) => {
     try {
-      const response = await axios.post('http://localhost:8800/api/admin/approveSlip', { transactionIds: transactions });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/approveSlip`, { transactionIds: transactions });
       console.log('Verified:', response.data);
-      await axios.delete(`http://localhost:8800/api/admin/deleteSlip/${slipId}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/deleteSlip/${slipId}`);
       setSlips(currentSlips => currentSlips.filter(slip => slip.uploadslip_id.toString() !== slipId.toString()));
     } catch (error) {
       console.error('Error verifying transactions:', error);
@@ -26,9 +26,9 @@ function Payment() {
 
   const handleReject = async (slipId, transactions) => {
     try {
-      const response = await axios.post('http://localhost:8800/api/admin/rejectSlip', { transactionIds: transactions });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/rejectSlip`, { transactionIds: transactions });
       console.log('Rejected:', response.data);
-      await axios.delete(`http://localhost:8800/api/admin/deleteSlip/${slipId}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/deleteSlip/${slipId}`);
       setSlips(currentSlips => currentSlips.filter(slip => slip.uploadslip_id.toString() !== slipId.toString()));
     } catch (error) {
       console.error('Error rejecting transactions:', error);
@@ -39,7 +39,7 @@ function Payment() {
   useEffect(() => {
     const fetchSlips = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/api/admin/slips');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/slips`);
         console.log(response.data)
         setSlips(response.data);
         setLoading(false);
@@ -76,11 +76,11 @@ function Payment() {
                   <td className="px-4 py-2">
                     <div className="flex justify-center">
                       <img
-                        src={`http://localhost:8800/${slip.filePath}`}
+                        src={`${import.meta.env.VITE_API_URL}/${slip.filePath}`}
                         alt="Payment Slip"
                         style={{ width: 'auto', height: '100px' }}
                         className="cursor-pointer"
-                        onClick={() => handleImageClick(`http://localhost:8800/${slip.filePath}`)} 
+                        onClick={() => handleImageClick(`${import.meta.env.VITE_API_URL}/${slip.filePath}`)} 
                       />
                     </div>
                   </td>

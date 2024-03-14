@@ -18,7 +18,7 @@ function PayCom() {
   useEffect(() => {
     const generateQRCode = async () => {
       try {
-        const response = await axios.post('http://localhost:8800/api/admin/generateqr', { amount: totalCommission });
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/generateqr`, { amount: totalCommission });
         setQrCodeUrl(response.data.qrCodeUrl);
       } catch (error) {
         console.error("Error generating QR code: ", error.message);
@@ -72,12 +72,12 @@ const handleOpenSubmitDialog = () => {
     formData.append('totalCommission', parseFloat(totalCommission).toFixed(2).toString());
   
     try {
-      await axios.post('http://localhost:8800/api/file/upload/slip', formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/slip`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      await axios.post('http://localhost:8800/api/user/updatetransaction', {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/updatetransaction`, {
         transactionIds: JSON.stringify(selectedTransactions),
       });
   
@@ -155,8 +155,6 @@ const handleOpenSubmitDialog = () => {
 >
   {isSubmitting ? 'Submitting...' : 'Submit'}
 </button>
-
-
           </form>
         </div>
         <Dialog
@@ -178,7 +176,6 @@ const handleOpenSubmitDialog = () => {
     </Button>
   </DialogActions>
 </Dialog>
-
       </div>
     </div>
   );

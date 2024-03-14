@@ -8,7 +8,7 @@ function Download() {
   useEffect(() => {
     const fetchBots = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/api/bot/getdata');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/bot/getdata`);
         setBots(response.data.bots);
         if (response.data.bots.length > 0) {
           console.log(bots)
@@ -30,7 +30,7 @@ function Download() {
       return;
     }
   
-    const downloadUrl = `http://localhost:8800/${selectedBot.botPath}`; // Adjust the path as necessary
+    const downloadUrl = `${import.meta.env.VITE_API_URL}/${selectedBot.botPath}`; // Adjust the path as necessary
   
     const link = document.createElement('a');
     link.href = downloadUrl;
@@ -47,7 +47,7 @@ function Download() {
           <div className="bg-gray-200 rounded-lg overflow-hidden w-full md:w-1/2 mb-4 md:mb-0">
             {selectedBot && (
               <img
-                src={`http://localhost:8800/${selectedBot.imagePath}`}
+                src={`${import.meta.env.VITE_API_URL}/${selectedBot.imagePath}`}
                 alt={selectedBot.name}
                 className="w-full h-full object-cover"
               />
