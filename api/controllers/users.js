@@ -17,7 +17,7 @@ const fetchUserData = (req, res) => {
         FROM 
             account a
         LEFT JOIN 
-            Ports p ON a.Account_ID = p.account_id
+            ports p ON a.Account_ID = p.account_id
         LEFT JOIN 
             transaction t ON p.port_id = t.port_id
         WHERE 

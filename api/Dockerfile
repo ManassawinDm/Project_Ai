@@ -13,22 +13,22 @@
 # CMD ["npm", "start"]
 
 
-# FROM node:21
+FROM node:21
 
-# WORKDIR /usr/src/app
+WORKDIR /usr/src/app
 
-# # Ensure we're not copying local node_modules
-# COPY .dockerignore .
+# Ensure we're not copying local node_modules
+COPY .dockerignore .
 
-# # Copy package.json and package-lock.json
-# COPY package*.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
-# # Clear any existing npm cache, and install dependencies, including native addons
-# RUN npm cache verify && npm install
+# Clear any existing npm cache, and install dependencies, including native addons
+RUN npm cache verify && npm install
 
-# # Copy the rest of your application code
-# COPY . .
+# Copy the rest of your application code
+COPY . .
 
-# EXPOSE 8112
+EXPOSE 8112
 
-# CMD ["npm", "start"]
+CMD ["npm", "start"]

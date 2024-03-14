@@ -1,17 +1,17 @@
-# FROM node:16
+FROM node:21
 
-# WORKDIR /app
+WORKDIR /app
 
-# COPY package*.json ./
+COPY package*.json ./
 
-# RUN npm install
+RUN npm install
 
-# COPY . .
+COPY . .
 
-# RUN npm run build
+RUN npm run build
 
-# RUN npm install -g serve
+RUN npm install -g serve
 
-# EXPOSE 8110
+EXPOSE 8110
 
-# CMD ["serve", "-s", "dist", "-p", "8110"]
+CMD ["serve", "-s", "dist", "-p", "8110"]
