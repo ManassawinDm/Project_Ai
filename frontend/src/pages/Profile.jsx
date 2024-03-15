@@ -27,6 +27,7 @@ function Profile() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
+  const [anyTransactionLocked, setAnyTransactionLocked] = useState(false);
 
   const calculateTotalCommission = () => {
     const totalCommissionInBaht = selectedTransactions.reduce(
@@ -107,27 +108,48 @@ function Profile() {
   };
   const fetchTransactions = async (portId) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8112/api/user/transactions/${portId}`
-      );
-      setTransactions(response.data.transactions);
+      const response = await axios.get(`http://localhost:8112/api/user/transactions/${portId}`);
+      const transactionsWithLockInfo = response.data.transactions.map((transaction) => {
+        const transactionDate = new Date(transaction.Date);
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  
+        // Mark the transaction as 'locked' if it's older than 1 month
+        return {
+          ...transaction,
+          locked: transactionDate < oneMonthAgo
+        };
+      });
+  
+      // Check if any transactions are locked
+      const anyLocked = transactionsWithLockInfo.some(t => t.locked);
+      setAnyTransactionLocked(anyLocked); // Update state based on if any transactions are locked
+      
+      if (anyLocked) {
+        setSelectedTransactions(transactionsWithLockInfo.map(t => t.Transaction_ID));
+      }
+  
+      setTransactions(transactionsWithLockInfo);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   };
+  
+  
 
-  const handleTransactionSelectionChange = (transactionId) => {
-    setSelectedTransactions((prevSelected) => {
-      // Check if the transaction ID is already selected
-      if (prevSelected.includes(transactionId)) {
-        // If it is, remove it from the array
-        return prevSelected.filter((id) => id !== transactionId);
-      } else {
-        // If it's not selected, add it to the array
-        return [...prevSelected, transactionId];
-      }
-    });
-  };
+const handleTransactionSelectionChange = (transactionId) => {
+  // Prevent changing selection of locked transactions
+  const transaction = transactions.find(t => t.Transaction_ID === transactionId);
+  if (transaction && transaction.locked) return; // Do nothing if transaction is locked
+
+  setSelectedTransactions((prevSelected) => {
+    if (prevSelected.includes(transactionId)) {
+      return prevSelected.filter((id) => id !== transactionId);
+    } else {
+      return [...prevSelected, transactionId];
+    }
+  });
+};
   const handleVerificationImageChange = (event) => {
     setVerificationImage(event.target.files[0]); // Capture selected image
   };
@@ -230,7 +252,7 @@ function Profile() {
     if (selectedTransactions.length === transactions.length) {
       setSelectedTransactions([]);
     } else {
-      setSelectedTransactions(transactions.map((t) => t.Transaction_ID));
+      setSelectedTransactions(transactions.filter((t) => !t.locked || t.locked).map((t) => t.Transaction_ID));
     }
   };
 
@@ -411,32 +433,34 @@ function Profile() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((transaction) => (
-                      <tr
-                        key={transaction.Transaction_ID}
-                        className="border-b border-[#00df9a]"
-                      >
-                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-                          {new Date(transaction.Date).toLocaleDateString()}
-                        </td>
-                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-                          ฿{transaction.Commission.toFixed(2)}
-                        </td>
-                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-                          <input
-                            type="checkbox"
-                            checked={selectedTransactions.includes(
-                              transaction.Transaction_ID
-                            )}
-                            onChange={() =>
-                              handleTransactionSelectionChange(
-                                transaction.Transaction_ID
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                  {transactions.map((transaction) => (
+  <tr
+    key={transaction.Transaction_ID}
+    className="border-b border-[#00df9a]"
+  >
+    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+      {new Date(transaction.Date).toLocaleDateString()}
+    </td>
+    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+      ฿{transaction.Commission.toFixed(2)}
+    </td>
+    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+      <input
+        type="checkbox"
+        checked={selectedTransactions.includes(
+          transaction.Transaction_ID
+        )}
+        onChange={() =>
+          handleTransactionSelectionChange(
+            transaction.Transaction_ID
+          )
+        }
+        disabled={transaction.locked} // Disable checkbox if transaction is locked
+      />
+    </td>
+  </tr>
+))}
+
                   </tbody>
                 </table>
               </div>
@@ -449,12 +473,17 @@ function Profile() {
                     ฿{calculateTotalCommission().toFixed(2)}
                   </p>
                 </div>
-                <button
-                  onClick={handleSelectAllTransactions}
-                  className="px-4 py-2 bg-[#00df9a] text-[#133f31] rounded hover:bg-[#44967c] transition-colors duration-300"
-                >
-                  Select All
-                </button>
+                {
+  !anyTransactionLocked && (
+    <button
+      onClick={handleSelectAllTransactions}
+      className="px-4 py-2 bg-[#00df9a] text-[#133f31] rounded hover:bg-[#44967c] transition-colors duration-300"
+    >
+      Select All
+    </button>
+  )
+}
+
               </div>
               {selectionError && (
                 <div className="text-red-500 text-center mt-2 mb-2">

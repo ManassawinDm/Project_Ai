@@ -110,26 +110,35 @@ const validateAccount = (req, res) => {
         }
 
         if (result.length > 0) {
-            // console.log("Found port: ", result);
             const portId = result[0].port_id;
-            const portStatus = result[0].status; // Assuming the status column exists in your ports table
+            const portStatus = result[0].status;
 
-            // Proceed only if the port's status is verified
             if (portStatus === 1) {
-                // Modified query to sum commissions for transactions that are not paid (status != 1)
-                const queryGetCommissionSum = "SELECT SUM(Commission) AS TotalCommission FROM transaction WHERE port_id = ? AND status != 1";
-                db.query(queryGetCommissionSum, [portId], (sumErr, sumResult) => {
-                    if (sumErr) {
-                        console.error(sumErr);
-                        return res.status(500).json({ message: 'Error calculating commission sum', error: sumErr });
+                // Adjust the query to check if there are transactions older than 1 month
+                const queryCheckOldTransactions = `
+                    SELECT 
+                        SUM(Commission) AS TotalCommission, 
+                        MIN(date) AS OldestTransactionDate 
+                    FROM transaction 
+                    WHERE port_id = ? AND status != 1`;
+
+                db.query(queryCheckOldTransactions, [portId], (err, sumResult) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: 'Error calculating commission sum', error: err });
                     }
 
                     const totalCommission = sumResult[0].TotalCommission || 0;
-                    console.log(totalCommission)
-                    if (totalCommission <= 300) {
-                        res.json({ isValid: true, verify: true, commissionCheck: true });
+                    const oldestTransactionDate = new Date(sumResult[0].OldestTransactionDate);
+                    const oneMonthAgo = new Date();
+                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+                    // If the oldest transaction date is more than 1 month old and the total commission exceeds 300
+                    if (oldestTransactionDate < oneMonthAgo && totalCommission > 300) {
+                        res.json({ isValid: true, verify: true, commissionCheck: false, message: 'Oldest transaction is older than 1 month, and total commission exceeds 300.' });
                     } else {
-                        res.json({ isValid: true, verify: true, commissionCheck: false });
+                        // Handle other cases accordingly
+                        res.json({ isValid: true, verify: true, commissionCheck: true, message: 'All transactions are within 1 month or total commission does not exceed 300.' });
                     }
                 });
             } else if (portStatus === 0) { // Port is rejected
@@ -137,12 +146,12 @@ const validateAccount = (req, res) => {
             } else { // Port status is unknown or not handled
                 res.json({ isValid: true, verify: false, message: 'Port status is unknown' });
             }
-
         } else {
             res.json({ isValid: false, verify: false, message: 'Port Number not found' });
         }
     });
 };
+
 
 const getUsdToThbRate = async () => {
     try {
@@ -352,7 +361,9 @@ const payCommissions = async (req, res) => {
 const gettransaction = (req, res) => {
     const { portId } = req.params;
 
-    db.query('SELECT * FROM transaction WHERE port_id = ? AND status IN (0, 2)', [portId], (error, rows) => {
+    // Assuming your date column is named `transaction_date`
+    // and you want to order such that the oldest transaction is first
+    db.query('SELECT * FROM transaction WHERE port_id = ? AND status IN (0, 2) ORDER BY Date ASC', [portId], (error, rows) => {
         if (error) {
             console.error('Error fetching transactions:', error);
             res.status(500).json({ error: 'Internal server error' });
@@ -361,6 +372,7 @@ const gettransaction = (req, res) => {
         }
     });
 };
+
 
 const updatetransaction = async (req, res) => {
     // Assume transactionIds is already parsed from JSON string to array

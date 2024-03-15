@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 14, 2024 at 06:59 PM
+-- Generation Time: Mar 15, 2024 at 12:59 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -66,7 +66,7 @@ CREATE TABLE `bots` (
 --
 
 INSERT INTO `bots` (`bot_id`, `name`, `description`, `bot_path`, `image_path`, `backtest_image_path`, `backtest_html_path`) VALUES
-(46, '3 EMA USDJPY', 'this bot is using 3 EMA pullback strategy using USDJPY 1 hour timeframes', '..\\public\\bot\\1710438789855-3EMA.ex4', '..\\public\\botimage\\1710438789856-Screenshot1.png', '..\\public\\backtestimage\\1710438789857-StrategyTester.gif', '..\\public\\backtesthtml\\1710438789857-StrategyTester.htm');
+(51, '124sdfgadf', '123414251', '..\\public\\bot\\1710500005718-fxDreema.mq4', '..\\public\\botimage\\1710500005722-OIG2 (1).jpg', '..\\public\\backtestimage\\1710500005725-StrategyTester.gif', '..\\public\\backtesthtml\\1710500005725-StrategyTester.htm');
 
 -- --------------------------------------------------------
 
@@ -84,7 +84,7 @@ CREATE TABLE `bot_currencies` (
 --
 
 INSERT INTO `bot_currencies` (`bot_id`, `currency_id`) VALUES
-(46, 2);
+(51, 2);
 
 -- --------------------------------------------------------
 
@@ -96,16 +96,18 @@ CREATE TABLE `currencies` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `imagePath` varchar(255) NOT NULL,
-  `dateAdded` date DEFAULT (curdate())
+  `dateAdded` date DEFAULT curdate(),
+  `mse` decimal(10,4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `currencies`
 --
 
-INSERT INTO `currencies` (`id`, `name`, `imagePath`, `dateAdded`) VALUES
-(1, 'EURUSD', '..\\public\\currency\\1710438118975-EURUSD.png', '2024-03-14'),
-(2, 'USDJPY', '..\\public\\currency\\1710438641936-USDJPY.png', '2024-03-14');
+INSERT INTO `currencies` (`id`, `name`, `imagePath`, `dateAdded`, `mse`) VALUES
+(1, 'EURUSD', '..\\public\\currency\\1710438118975-EURUSD.png', '2024-03-15', 0.0034),
+(2, 'USDJPY', '..\\public\\currency\\1710438641936-USDJPY.png', '2024-03-15', 0.0026),
+(4, 'GOLD', '..\\public\\currency\\1710455356467-XAUUSD.png', '2024-03-14', 0.0035);
 
 -- --------------------------------------------------------
 
@@ -150,11 +152,11 @@ CREATE TABLE `transaction` (
 --
 
 INSERT INTO `transaction` (`Transaction_ID`, `Date`, `Profit`, `Commission`, `Status`, `port_id`) VALUES
-(5, '2018-01-15', 84.23, 8.42, '3', 8),
-(6, '2018-01-22', 136.83, 13.68, '1', 8),
-(7, '2018-02-05', 147.85, 14.78, '1', 8),
-(8, '2018-02-19', 937.55, 93.75, '2', 8),
-(9, '2018-02-26', 273.30, 27.33, '2', 8);
+(5, '2024-03-08', 84.23, 8.42, '0', 8),
+(6, '2024-03-08', 136.83, 13.68, '1', 8),
+(7, '2024-03-08', 147.85, 14.78, '1', 8),
+(8, '2024-03-08', 937.55, 93.75, '2', 8),
+(9, '2024-03-08', 273.30, 27.33, '2', 8);
 
 -- --------------------------------------------------------
 
@@ -271,13 +273,13 @@ ALTER TABLE `account`
 -- AUTO_INCREMENT for table `bots`
 --
 ALTER TABLE `bots`
-  MODIFY `bot_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `bot_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT for table `currencies`
 --
 ALTER TABLE `currencies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `ports`

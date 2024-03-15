@@ -1,0 +1,8 @@
+zmq
+requests
+keras
+tensorflow  # Keras is now included within TensorFlow
+scikit-learn
+yfinance
+pandas
+numpy

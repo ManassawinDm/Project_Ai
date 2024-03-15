@@ -216,84 +216,124 @@ const botAndImageUploadHandler = (req, res) => {
         { name: 'backtestImage', maxCount: 1 },
         { name: 'backtestHtml', maxCount: 1 } // Accept a backtestHtml file
     ])(req, res, (error) => {
-        if (error) {
-            return res.status(500).json({ message: "Error uploading files", error: error.message });
+      if (error) {
+        return res.status(500).json({ message: "Error uploading files", error: error.message });
+    }
+
+    if (!req.files['bot'] || !req.files['verificationImage'] || !req.files['backtestImage'] || !req.files['backtestHtml']) {
+        return res.status(400).send("All files must be uploaded.");
+    }
+
+    const botFile = req.files['bot'][0];
+    const verificationImageFile = req.files['verificationImage'][0];
+    const backtestImageFile = req.files['backtestImage'][0];
+    const backtestHtmlFile = req.files['backtestHtml'][0];
+    const { name, description, selectedCurrencies } = req.body;
+
+    const botFilePath = path.relative(__dirname, botFile.path);
+    const verificationImagePath = path.relative(__dirname, verificationImageFile.path);
+    const backtestImagePath = path.relative(__dirname, backtestImageFile.path);
+    const backtestHtmlPath = path.relative(__dirname, backtestHtmlFile.path);
+
+    console.log(JSON.parse(selectedCurrencies));
+
+    db.beginTransaction((transactionErr) => {
+        if (transactionErr) {
+            return res.status(500).json({ message: "Error starting transaction", error: transactionErr.message });
         }
 
-        // Ensure all files are uploaded, including the backtestHtml file
-        if (!req.files['bot'] || !req.files['verificationImage'] || !req.files['backtestImage'] || !req.files['backtestHtml']) {
-            return res.status(400).send("All files must be uploaded.");
-        }
-    
-
-        const botFile = req.files['bot'][0];
-        const imageFile = req.files['verificationImage'][0];
-        const backtestImageFile = req.files['backtestImage'][0];
-        const backtestHtmlFile = req.files['backtestHtml'][0];
-        const { name, description, selectedCurrencies } = req.body;
-
-        const botFilePath = path.relative(__dirname, botFile.path);
-        const imageFilePath = path.relative(__dirname, imageFile.path);
-        const backtestImagePath = path.relative(__dirname, backtestImageFile.path);
-        const backtestHtmlPath = path.relative(__dirname, backtestHtmlFile.path); // Path for the backtestHtml file
-
-        console.log(JSON.parse(selectedCurrencies));
-        // Start database transaction
-        db.beginTransaction((transactionErr) => {
-            if (transactionErr) {
-                return res.status(500).json({ message: "Error starting transaction", error: transactionErr.message });
-            }
-
-            // Insert bot into database with the path for the backtest image
-            const insertQuery = `
+        const insertQuery = `
             INSERT INTO bots (name, description, bot_path, image_path, backtest_image_path, backtest_html_path)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
-        db.query(insertQuery, [name, description, botFilePath, imageFilePath, backtestImagePath, backtestHtmlPath], (insertErr, insertResult) => {
-                if (insertErr) {
+        db.query(insertQuery, [name, description, botFilePath, verificationImagePath, backtestImagePath, backtestHtmlPath], (insertErr, insertResult) => {
+            if (insertErr) {
+                db.rollback(() => {
+                    console.error("Database insert error:", insertErr);
+                    return res.status(500).send("Internal Server Error when inserting bot, images.");
+                });
+                return;
+            }
+
+            const botId = insertResult.insertId;
+            console.log(botId);
+            const currenciesInsertQuery = 'INSERT INTO bot_currencies (bot_id, currency_id) VALUES ?';
+            const currenciesValues = JSON.parse(selectedCurrencies).map(currencyId => [botId, currencyId]);
+            console.log(currenciesValues);
+            db.query(currenciesInsertQuery, [currenciesValues], (currenciesErr, currenciesResult) => {
+                if (currenciesErr) {
                     db.rollback(() => {
-                        console.error("Database insert error:", insertErr);
-                        return res.status(500).send("Internal Server Error when inserting bot, images.");
+                        console.error('Error inserting bot-currency relationship:', currenciesErr);
+                        return res.status(500).json({ message: "Failed to associate bot with currencies" });
                     });
                     return;
                 }
 
-                const botId = insertResult.insertId;
-                console.log(botId)
-                const currenciesInsertQuery = 'INSERT INTO bot_currencies (bot_id, currency_id) VALUES ?';
-                const currenciesValues = JSON.parse(selectedCurrencies).map(currencyId => [botId, currencyId]);
-                console.log(currenciesValues)
-                db.query(currenciesInsertQuery, [currenciesValues], (currenciesErr, currenciesResult) => {
-                    if (currenciesErr) {
+                // Assuming these paths are relative to your server's public directory
+                const htmlFilePath = path.join(__dirname, '../public', backtestHtmlPath);
+
+                fs.readFile(htmlFilePath, 'utf8', (err, htmlData) => {
+                    if (err) {
+                        console.error('Error reading HTML file:', err);
                         db.rollback(() => {
-                            console.error('Error inserting bot-currency relationship:', currenciesErr);
-                            return res.status(500).json({ message: "Failed to associate bot with currencies" });
+                            return res.status(500).send('Failed to load backtest HTML');
                         });
                         return;
                     }
 
-                    db.commit((commitErr) => {
-                        if (commitErr) {
-                            db.rollback(() => {
-                                console.error('Error committing transaction:', commitErr);
-                                return res.status(500).send('Failed to commit transaction');
-                            });
-                            return;
-                        }
+                    // Replace image src with the new path
+                    const updatedHtmlData = htmlData.replace(/src="[^"]+"/g, `src="/${backtestImagePath}"`);
 
-                        res.json({
-                            success: true,
-                            message: "Bot, images, and currency associations uploaded successfully",
-                            botFilePath: botFilePath,
-                            imageFilePath: imageFilePath,
-                            backtestImagePath: backtestImagePath, // Include backtest image path in response
-                            botId: botId
+                    // Find the index of the <img> tag
+                    const imgIndex = updatedHtmlData.lastIndexOf('<img');
+                    // Find the index of the <table> tag after the <img> tag
+                    const tableIndex = updatedHtmlData.indexOf('<table width=820 cellspacing=1 cellpadding=3 border=0>', imgIndex);
+
+                    // Check if both imgIndex and tableIndex are found
+                    if (imgIndex !== -1 && tableIndex !== -1) {
+                        // Remove everything from the found <table> index to the end of the string
+                        const finalHtmlData = updatedHtmlData.substring(0, tableIndex);
+
+                        // Overwrite the original file
+                        fs.writeFile(htmlFilePath, finalHtmlData, 'utf8', (writeErr) => {
+                            if (writeErr) {
+                                console.error('Error writing modified HTML file:', writeErr);
+                                db.rollback(() => {
+                                    return res.status(500).send('Failed to process backtest HTML');
+                                });
+                                return;
+                            }
+
+                            db.commit((commitErr) => {
+                                if (commitErr) {
+                                    db.rollback(() => {
+                                        console.error('Error committing transaction:', commitErr);
+                                        return res.status(500).send('Failed to commit transaction');
+                                    });
+                                    return;
+                                }
+
+                                res.json({
+                                    success: true,
+                                    message: "Bot, images, and currency associations uploaded successfully",
+                                    botFilePath: botFilePath,
+                                    verificationImagePath: verificationImagePath,
+                                    backtestImagePath: backtestImagePath,
+                                    botId: botId
+                                });
+                            });
                         });
-                    });
+                    } else {
+                        console.error('Could not find required tags in HTML file');
+                        db.rollback(() => {
+                            return res.status(500).send('Failed to process backtest HTML due to tag mismatch');
+                        });
+                    }
                 });
             });
         });
     });
+});
 };
 
     
@@ -354,32 +394,13 @@ const CurrencyUploadHandler = (req, res) => {
 };
 
 const changeBacketestHTML = (req, res) => {
-    const { backtestHtmlPath, backtestImagePath, URL } = req.body;
-  
-    // Assuming these paths are relative to your server's public directory
-    const htmlFilePath = path.join(__dirname, '../public', backtestHtmlPath);
-    const imageFilePath = path.join(__dirname, '../public', backtestImagePath);
-  
-    fs.readFile(htmlFilePath, 'utf8', (err, htmlData) => {
-      if (err) {
-        console.error('Error reading HTML file:', err);
-        return res.status(500).send('Failed to load backtest HTML');
-      }
-      // Replace image src with the new path
-      const updatedHtmlData = htmlData.replace(/src="[^"]+"/g, `src="${URL}/${backtestImagePath}"`);
+  const { backtestHtmlPath, URL } = req.body;
 
-      // Overwrite the original file
-      fs.writeFile(htmlFilePath, updatedHtmlData, 'utf8', (writeErr) => {
-        if (writeErr) {
-          console.error('Error writing modified HTML file:', writeErr);
-          return res.status(500).send('Failed to process backtest HTML');
-        }
-  
-        // Respond with the URL to the modified (now overwritten) HTML
-        const modifiedHtmlUrl = `${URL}/${backtestHtmlPath}`;
-        res.json({ modifiedHtmlUrl });
-      });
-    });
+  // Construct the URL to the HTML file, assuming it's located in your server's public directory
+  const modifiedHtmlUrl = `${URL}/${backtestHtmlPath}`;
+
+  // Respond with the URL to the HTML file without modifying it
+  res.json({ modifiedHtmlUrl });
 }
 
       
