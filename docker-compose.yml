@@ -9,7 +9,7 @@ services:
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
-      # - uploaded_images:/usr/src/app/public/UserProfile/acc_profile
+      - /usr/src/app/venv
     depends_on:
       - db
     env_file: 

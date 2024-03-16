@@ -96,7 +96,7 @@ CREATE TABLE `currencies` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `imagePath` varchar(255) NOT NULL,
-  `dateAdded` date DEFAULT curdate(),
+  `dateAdded` date DEFAULT (curdate()),
   `mse` decimal(10,4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

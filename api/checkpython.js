@@ -71,7 +71,7 @@ async function checkCurrencyAndUpdate() {
 
 }
 
-cron.schedule('0 18 * * *', () => {
+cron.schedule('* * * * *', () => {
     console.log('RUN DAILY CHECK');
     checkCurrencyAndUpdate();
 });

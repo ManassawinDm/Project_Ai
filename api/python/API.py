@@ -128,25 +128,25 @@ def predict_price(model, x_test, scaler):
 # ----------------- CHECK ------------------------------
 def handle_check_port_and_status(data):
     validation_response = send_to_check({"AccountNumber": data.get('AccountNumber')})
-    print("Validation Response:", validation_response)
+    # print("Validation Response:", validation_response)
 
     # Check if account is valid and verified
     if validation_response.get('isValid') and validation_response.get('verify'):
         # Now, check if the commission check passes
         if validation_response.get('commissionCheck'):
-            # All checks pass, proceed with prediction
             currency = data.get('Currency')
             date = data.get('date')
 
             end_date = datetime.datetime.strptime(date, '%Y-%m-%d')
             start_date = end_date - datetime.timedelta(days=150)
             currency_download = currency_to_yfinance.get(currency)
-            
             model_filename = get_model_filename(currency)
-
+            print(currency)
+            print(currency_download)
+            print(model_filename)
             if not currency_download or not model_filename:
-                # Currency not supported
                 return {"error": "Currency not supported"}
+
             
             try:
                 model = load_model(model_filename)
@@ -154,25 +154,22 @@ def handle_check_port_and_status(data):
                 if df.empty:
                     return {"error": "No data available for the specified date and currency"}
                 
-                x_test, scaler = prepare_data(df, 60)  # 60 as the look_back period
-                predicted_close = predict_price(model, x_test, scaler)
-                print("Predicted Close Price:", predicted_close)
+                x_test, scaler = prepare_data(df, 60)  # Assuming 'prepare_data' returns processed features and a scaler object
+                predicted_close = predict_price(model, x_test, scaler)  # Implement 'predict_price' to return the predicted price
                 return {"date": date, "predictedClose": float(predicted_close), "Currency": currency}
             
             except Exception as e:
                 print(e)
                 return {"error": "Failed to predict price. Please try again later."}
         else:
-            # Commission check fails
             return {"error": "Please pay the commission."}
     else:
-        # Account is either not valid or not verified
         return {"error": validation_response.get('message')}
 
     
 #--------------------- Send To server Check -----------------
 def send_to_check(data):
-    url = 'http://localhost:8800/api/user/validateAccount'
+    url = 'http://localhost:8112/api/user/validateAccount'
     try:
         response = requests.post(url, json=data)
         if response.status_code == 200:
@@ -190,7 +187,7 @@ def send_to_check(data):
 
 
 def handle_weekly_profit(data):
-    url = 'http://localhost:8800/api/user/Commission'
+    url = 'http://localhost:8112/api/user/Commission'
 
     try:
         response = requests.post(url, json=data)
@@ -206,10 +203,17 @@ def handle_weekly_profit(data):
 
 
 def get_model_filename(currency):
+    model_directory = os.path.join(os.getcwd(), 'api', 'python')  # Define the directory where model files are
     model_filename = f"{currency}_model.h5"
-    if os.path.isfile(model_filename):
-        return model_filename
-    return None
+    model_path = os.path.join(model_directory, model_filename)  # Full path to the model file
+    
+    print("Looking for model in:", model_path)  # This will show you the full path
+
+    if os.path.isfile(model_path):
+        return model_path
+    else:
+        print("Model file not found at:", model_path)  # This will confirm if the file exists at the path
+        return None
 
 
 #--------------------- ZeroMQ Server --------------------

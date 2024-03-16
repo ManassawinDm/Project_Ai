@@ -1,4 +1,4 @@
-zmq
+pyzmq
 requests
 keras
 tensorflow  # Keras is now included within TensorFlow
