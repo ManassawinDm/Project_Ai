@@ -9,6 +9,8 @@ import math
 import numpy as np
 from datetime import datetime, timedelta
 import sys
+import os
+import shutil
 currency_to_yfinance = {
     # Forex
     "EURUSD": "EURUSD=X",
@@ -106,8 +108,15 @@ currency_to_yfinance = {
     "GER10Y": "DE10YB=RR",
     }
 
+def backup_model_file(model_dir, currency_name):
+    current_model_path = os.path.join(model_dir, f"{currency_name}_model.h5")
+    backup_model_path = os.path.join(model_dir, f"{currency_name}_model_backup.h5")
+
+    if os.path.isfile(current_model_path):
+        shutil.move(current_model_path, backup_model_path)
+        print(f"Backed up the old model to {backup_model_path}")
+
 def train_model(currency_name, end_date):
-    # Use yfinance identifier as ticker symbol
     yfinance_identifier = currency_to_yfinance.get(currency_name)
     
     if not yfinance_identifier:
@@ -150,7 +159,7 @@ def train_model(currency_name, end_date):
     history = model.fit(x_train, y_train, batch_size=1, epochs=1)
     mse = history.history['loss'][-1]  # Get the last MSE value from training
     print(f"MSE:{mse}")
-
+    backup_model_file('./python', currency_name)
     try:
         # Save the model with currency name
         model.save(f"./python/{currency_name}_model.h5")
