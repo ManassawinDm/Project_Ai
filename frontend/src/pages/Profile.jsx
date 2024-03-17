@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../component/authContext";
 import axios from "axios";
 import Script from "react-load-script";
-import { Alert, Snackbar } from "@mui/material";
+import { Alert, Snackbar,Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button,Typography } from "@mui/material";
 
 let OmiseCard;
 
@@ -28,6 +28,9 @@ function Profile() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
   const [anyTransactionLocked, setAnyTransactionLocked] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [amount, setAmount] = useState(0);
 
   const calculateTotalCommission = () => {
     const totalCommissionInBaht = selectedTransactions.reduce(
@@ -39,7 +42,7 @@ function Profile() {
       },
       0
     );
-    return Math.round(totalCommissionInBaht);
+    return totalCommissionInBaht;
   };
 
   const calculateTotalCommissionforOmise = () => {
@@ -88,6 +91,12 @@ function Profile() {
     omiseCardHandler();
   };
 
+  const handlePaybank = (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+    bankConfigure();
+    omisebankHandler();
+  };
+
   const handleSelectPort = async (event) => {
     const portNumber = event.target.value;
     setSelectedPortNumber(portNumber);
@@ -108,48 +117,54 @@ function Profile() {
   };
   const fetchTransactions = async (portId) => {
     try {
-      const response = await axios.get(`http://localhost:8112/api/user/transactions/${portId}`);
-      const transactionsWithLockInfo = response.data.transactions.map((transaction) => {
-        const transactionDate = new Date(transaction.Date);
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-  
-        // Mark the transaction as 'locked' if it's older than 1 month
-        return {
-          ...transaction,
-          locked: transactionDate < oneMonthAgo
-        };
-      });
-  
+      const response = await axios.get(
+        `http://localhost:8112/api/user/transactions/${portId}`
+      );
+      const transactionsWithLockInfo = response.data.transactions.map(
+        (transaction) => {
+          const transactionDate = new Date(transaction.Date);
+          const oneMonthAgo = new Date();
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+          // Mark the transaction as 'locked' if it's older than 1 month
+          return {
+            ...transaction,
+            locked: transactionDate < oneMonthAgo,
+          };
+        }
+      );
+
       // Check if any transactions are locked
-      const anyLocked = transactionsWithLockInfo.some(t => t.locked);
+      const anyLocked = transactionsWithLockInfo.some((t) => t.locked);
       setAnyTransactionLocked(anyLocked); // Update state based on if any transactions are locked
-      
+
       if (anyLocked) {
-        setSelectedTransactions(transactionsWithLockInfo.map(t => t.Transaction_ID));
+        setSelectedTransactions(
+          transactionsWithLockInfo.map((t) => t.Transaction_ID)
+        );
       }
-  
+
       setTransactions(transactionsWithLockInfo);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   };
-  
-  
 
-const handleTransactionSelectionChange = (transactionId) => {
-  // Prevent changing selection of locked transactions
-  const transaction = transactions.find(t => t.Transaction_ID === transactionId);
-  if (transaction && transaction.locked) return; // Do nothing if transaction is locked
+  const handleTransactionSelectionChange = (transactionId) => {
+    // Prevent changing selection of locked transactions
+    const transaction = transactions.find(
+      (t) => t.Transaction_ID === transactionId
+    );
+    if (transaction && transaction.locked) return; // Do nothing if transaction is locked
 
-  setSelectedTransactions((prevSelected) => {
-    if (prevSelected.includes(transactionId)) {
-      return prevSelected.filter((id) => id !== transactionId);
-    } else {
-      return [...prevSelected, transactionId];
-    }
-  });
-};
+    setSelectedTransactions((prevSelected) => {
+      if (prevSelected.includes(transactionId)) {
+        return prevSelected.filter((id) => id !== transactionId);
+      } else {
+        return [...prevSelected, transactionId];
+      }
+    });
+  };
   const handleVerificationImageChange = (event) => {
     setVerificationImage(event.target.files[0]); // Capture selected image
   };
@@ -217,9 +232,8 @@ const handleTransactionSelectionChange = (transactionId) => {
           }
         );
         setuserEmail(response.data.userData.email);
-        const portsDataFromResponse = response.data.userData.ports; 
+        const portsDataFromResponse = response.data.userData.ports;
         setPortsData(portsDataFromResponse);
-        console.log(response.data.userData.ports);
         if (portsDataFromResponse.length > 0) {
           const initialPortNumber = portsDataFromResponse[0].port_number;
           const initialComission = portsDataFromResponse[0].total_commission;
@@ -237,7 +251,7 @@ const handleTransactionSelectionChange = (transactionId) => {
     } else {
       navigate("/login");
     }
-  }, [authToken, snackbarSeverity, snackbarMessage]);
+  }, [authToken, snackbarSeverity, snackbarMessage, openSnackbar,open]);
 
   const getStatusSymbol = (status) => {
     switch (status) {
@@ -252,7 +266,11 @@ const handleTransactionSelectionChange = (transactionId) => {
     if (selectedTransactions.length === transactions.length) {
       setSelectedTransactions([]);
     } else {
-      setSelectedTransactions(transactions.filter((t) => !t.locked || t.locked).map((t) => t.Transaction_ID));
+      setSelectedTransactions(
+        transactions
+          .filter((t) => !t.locked || t.locked)
+          .map((t) => t.Transaction_ID)
+      );
     }
   };
 
@@ -307,6 +325,80 @@ const handleTransactionSelectionChange = (transactionId) => {
     });
   };
 
+  const bankConfigure = () => {
+    OmiseCard.configure({
+      defaultPaymentMethod: "internet_banking",
+    });
+    OmiseCard.configureButton("#internet-bank");
+    OmiseCard.attach();
+  };
+
+  const omisebankHandler = () => {
+    OmiseCard.open({
+      amount: calculateTotalCommissionforOmise(),
+      onCreateTokenSuccess: async (token) => {
+        try {
+          const response = await axios.post(
+            "http://localhost:8112/api/omise/paymentBank",
+            {
+              amount: calculateTotalCommissionforOmise(),
+              selectedTransactions: selectedTransactions,
+              token: token,
+            }
+          );
+          // setOpenSnackbar(true);
+          // setSnackbarMessage("Payment successful");
+          // setSnackbarSeverity("success");
+          const { authorizeUri } = response.data;
+          if (authorizeUri) {
+            window.location.href = authorizeUri;
+          }
+        } catch (error) {
+          setOpenSnackbar(true);
+          setSnackbarMessage("Payment failed");
+          setSnackbarSeverity("error");
+        }
+      },
+      onFormClosed: () => {},
+    });
+  };
+
+  useEffect(() => {
+    const getStatus = async () => {
+      try {
+        const response = await axios.get("http://localhost:8112/api/omise/getstatus");
+        console.log(response);
+        const { status, amount } = response.data.slipData; 
+  
+        if (status) { 
+          setStatusMessage(status === 'successful' ? 'Successful' : 'Failed');
+          setAmount(amount/100);
+          setOpen(true); 
+        }
+      } catch (err) {
+        console.log(err);
+        setStatusMessage('Failed to retrieve status');
+        setOpen(true); 
+      }
+    };
+    getStatus();
+  }, []);
+
+  const handleresetStatus = async () => {
+    try {
+      await axios.post("http://localhost:8112/api/omise/setstatus",{});
+    } catch (error) {
+      console.error('Error verifying', error);
+    }
+  };
+
+  
+
+  const handleClose = () => {
+    setOpen(false);
+    handleresetStatus()
+  };
+
   return (
     <div className="flex flex-col items-center p-4 mt-8 text-white">
       <Snackbar
@@ -332,6 +424,33 @@ const handleTransactionSelectionChange = (transactionId) => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+      {statusMessage && (
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        sx={{
+          '& .MuiDialog-paper': {
+            backgroundColor: '#f0f0f0',
+            minWidth: '30%',
+          },
+        }}
+      >
+        <DialogTitle sx={{ backgroundColor: '#00df9a', color: '#ffffff' }}>Payment Status</DialogTitle>
+        <DialogContent>
+          <Typography variant="h6" component="p" sx={{ color: '#333', marginBottom: '16px' }}>
+            Amount: {amount} THB
+          </Typography>
+          <DialogContentText>
+            <Typography variant="body1" component="p" sx={{ color: statusMessage === 'Successful' ? '#4caf50' : '#f44336', fontSize: '1.25rem' }}>
+              {statusMessage}
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} variant="contained" sx={{ backgroundColor: '#00df9a', '&:hover': { backgroundColor: '#00b386' }}}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    )}
       <div className="w-full max-w-4xl">
         <div className="flex flex-col md:flex-row">
           <div className=" border border-[#0f1419] bg-[#1a222c] rounded-lg shadow-lg p-8 mb-4 md:mr-4 md:flex-grow">
@@ -433,34 +552,33 @@ const handleTransactionSelectionChange = (transactionId) => {
                     </tr>
                   </thead>
                   <tbody>
-                  {transactions.map((transaction) => (
-  <tr
-    key={transaction.Transaction_ID}
-    className="border-b border-[#00df9a]"
-  >
-    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-      {new Date(transaction.Date).toLocaleDateString()}
-    </td>
-    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-      ฿{transaction.Commission.toFixed(2)}
-    </td>
-    <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
-      <input
-        type="checkbox"
-        checked={selectedTransactions.includes(
-          transaction.Transaction_ID
-        )}
-        onChange={() =>
-          handleTransactionSelectionChange(
-            transaction.Transaction_ID
-          )
-        }
-        disabled={transaction.locked} // Disable checkbox if transaction is locked
-      />
-    </td>
-  </tr>
-))}
-
+                    {transactions.map((transaction) => (
+                      <tr
+                        key={transaction.Transaction_ID}
+                        className="border-b border-[#00df9a]"
+                      >
+                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+                          {new Date(transaction.Date).toLocaleDateString()}
+                        </td>
+                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+                          ฿{transaction.Commission.toFixed(2)}
+                        </td>
+                        <td className="px-2 md:px-4 py-3 whitespace-nowrap text-white">
+                          <input
+                            type="checkbox"
+                            checked={selectedTransactions.includes(
+                              transaction.Transaction_ID
+                            )}
+                            onChange={() =>
+                              handleTransactionSelectionChange(
+                                transaction.Transaction_ID
+                              )
+                            }
+                            disabled={transaction.locked} // Disable checkbox if transaction is locked
+                          />
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -473,17 +591,14 @@ const handleTransactionSelectionChange = (transactionId) => {
                     ฿{calculateTotalCommission().toFixed(2)}
                   </p>
                 </div>
-                {
-  !anyTransactionLocked && (
-    <button
-      onClick={handleSelectAllTransactions}
-      className="px-4 py-2 bg-[#00df9a] text-[#133f31] rounded hover:bg-[#44967c] transition-colors duration-300"
-    >
-      Select All
-    </button>
-  )
-}
-
+                {!anyTransactionLocked && (
+                  <button
+                    onClick={handleSelectAllTransactions}
+                    className="px-4 py-2 bg-[#00df9a] text-[#133f31] rounded hover:bg-[#44967c] transition-colors duration-300"
+                  >
+                    Select All
+                  </button>
+                )}
               </div>
               {selectionError && (
                 <div className="text-red-500 text-center mt-2 mb-2">
@@ -494,7 +609,7 @@ const handleTransactionSelectionChange = (transactionId) => {
                 id="credit-card"
                 type="button"
                 onClick={handlePay}
-                disabled={calculateTotalCommission() <= 20} 
+                disabled={calculateTotalCommission() <= 20}
                 className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
                   calculateTotalCommission() <= 20
                     ? "bg-[#44967c] opacity-50 cursor-not-allowed"
@@ -504,6 +619,21 @@ const handleTransactionSelectionChange = (transactionId) => {
                 {calculateTotalCommission() <= 20
                   ? "Must pay a minimum of 20฿"
                   : "Pay Commission"}
+              </button>
+              <button
+                id="internet-bank"
+                type="button"
+                onClick={handlePaybank}
+                disabled={calculateTotalCommission() <= 20}
+                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                  calculateTotalCommission() <= 20
+                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                    : "bg-[#00df9a] hover:bg-[#44967c]"
+                }`}
+              >
+                {calculateTotalCommission() <= 20
+                  ? "Must pay a minimum of 20฿"
+                  : "Pay with Bank"}
               </button>
               <button
                 type="button" // Change to 'button' to prevent it from submitting a form
