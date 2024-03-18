@@ -1,4 +1,6 @@
 require("dotenv").config();
+const QRCode = require('qrcode');
+const generatePayload = require('promptpay-qr');
 const db = require("../db.js");
 var omise = require("omise")({
   publicKey: process.env.VITE_OMISE_PUBLIC_KEY,
@@ -116,6 +118,51 @@ const OmiseWebhook = async (req, res, next) => {
 //   next();
 // };
 
+const OmisepaymentPromtpay= async (req, res) => {
+  const {amount,selectedTransactions,token} = req.body; 
+  const mobileNumber = '0969415597';
+  let imageQr
+  
+  try {
+    slipData.amount = amount;
+    const payload = generatePayload(mobileNumber, { amount });
+    QRCode.toDataURL(payload, (err, url) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Failed to generate QR code");
+      }
+      imageQr = url
+    });
+    
+    const charge = await omise.charges.create({
+      amount: amount,
+      currency: 'THB',
+      metadata: {
+        selectedTransactions: selectedTransactions,
+        amount: amount,
+      },
+      source: {
+        type: 'promptpay',
+        token:token,
+        scannable_code:{
+          image:{
+            location: imageQr
+          }
+        }
+      }
+    });
+    res.status(200).send({
+      amount: charge.amount,
+      status: charge.status,
+      authorizeUri: charge.source.scannable_code.image.download_uri,
+      secretApiKey:omise.secretKey
+    });
+  } catch (error) {
+    console.error('Payment error:', error);
+    res.status(500).send('Payment processing failed');
+  }
+};
+
 const getstatus = (req, res) => {
   try {
     res.status(200).send({ slipData: slipData });
@@ -136,6 +183,7 @@ module.exports = {
   Omisepayment,
   OmisepaymentBank,
   OmiseWebhook,
+  OmisepaymentPromtpay,
   getstatus,
   setstatus,
 };

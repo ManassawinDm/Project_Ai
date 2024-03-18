@@ -3,7 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../component/authContext";
 import axios from "axios";
 import Script from "react-load-script";
-import { Alert, Snackbar,Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button,Typography } from "@mui/material";
+import {
+  Alert,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Typography,
+} from "@mui/material";
 
 let OmiseCard;
 
@@ -29,8 +39,11 @@ function Profile() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
   const [anyTransactionLocked, setAnyTransactionLocked] = useState(false);
   const [open, setOpen] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState("");
   const [amount, setAmount] = useState(0);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [authorizeUri, setAuthorizeUri] = useState('');
+
 
   const calculateTotalCommission = () => {
     const totalCommissionInBaht = selectedTransactions.reduce(
@@ -95,6 +108,12 @@ function Profile() {
     event.preventDefault(); // Prevent the default form submission behavior
     bankConfigure();
     omisebankHandler();
+  };
+
+  const handlePromptPay = (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+    promtpayConfigure()
+    omisepromtpayHandler();
   };
 
   const handleSelectPort = async (event) => {
@@ -251,7 +270,7 @@ function Profile() {
     } else {
       navigate("/login");
     }
-  }, [authToken, snackbarSeverity, snackbarMessage, openSnackbar,open]);
+  }, [authToken, snackbarSeverity, snackbarMessage, openSnackbar, open]);
 
   const getStatusSymbol = (status) => {
     switch (status) {
@@ -318,7 +337,7 @@ function Profile() {
           .catch((error) => {
             setOpenSnackbar(true);
             setSnackbarMessage("Payment failed");
-            setSnackbarSeverity("error",error);
+            setSnackbarSeverity("error", error);
           });
       },
       onFormClosed: () => {},
@@ -328,7 +347,13 @@ function Profile() {
   const bankConfigure = () => {
     OmiseCard.configure({
       defaultPaymentMethod: "internet_banking",
-      otherPaymentMethods: ["mobile_banking_bay","mobile_banking_bbl","mobile_banking_kbank","mobile_banking_ktb","mobile_banking_scb"],
+      otherPaymentMethods: [
+        "mobile_banking_bay",
+        "mobile_banking_bbl",
+        "mobile_banking_kbank",
+        "mobile_banking_ktb",
+        "mobile_banking_scb",
+      ],
     });
     OmiseCard.configureButton("#internet-bank");
     OmiseCard.attach();
@@ -363,22 +388,60 @@ function Profile() {
     });
   };
 
+  const promtpayConfigure = () => {
+    OmiseCard.configure({
+      defaultPaymentMethod: "promptpay",
+    });
+    OmiseCard.configureButton("#internet-bank");
+    OmiseCard.attach();
+  };
+
+  const omisepromtpayHandler = () => {
+    OmiseCard.open({
+      amount: calculateTotalCommissionforOmise(),
+      onCreateTokenSuccess: async (token) => {
+        try {
+          const response = await axios.post(
+            "http://localhost:8112/api/omise/paymentpromtpay",
+            {
+              amount: calculateTotalCommissionforOmise(),
+              selectedTransactions: selectedTransactions,
+              token: token,
+            }
+          );
+          const { authorizeUri } = response.data;
+          if (authorizeUri) {
+            setAuthorizeUri(authorizeUri);
+            setIsPopupOpen(true); // Open the popup
+          }
+        } catch (error) {
+          setOpenSnackbar(true);
+          setSnackbarMessage("Payment failed");
+          setSnackbarSeverity("error");
+        }
+      },
+      onFormClosed: () => {},
+    });
+  };
+
   useEffect(() => {
     const getStatus = async () => {
       try {
-        const response = await axios.get("http://localhost:8112/api/omise/getstatus");
+        const response = await axios.get(
+          "http://localhost:8112/api/omise/getstatus"
+        );
         console.log(response);
-        const { status, amount } = response.data.slipData; 
-  
-        if (status) { 
-          setStatusMessage(status === 'successful' ? 'Successful' : 'Failed');
-          setAmount(amount/100);
-          setOpen(true); 
+        const { status, amount } = response.data.slipData;
+
+        if (status) {
+          setStatusMessage(status === "successful" ? "Successful" : "Failed");
+          setAmount(amount / 100);
+          setOpen(true);
         }
       } catch (err) {
         console.log(err);
-        setStatusMessage('Failed to retrieve status');
-        setOpen(true); 
+        setStatusMessage("Failed to retrieve status");
+        setOpen(true);
       }
     };
     getStatus();
@@ -386,19 +449,51 @@ function Profile() {
 
   const handleresetStatus = async () => {
     try {
-      await axios.post("http://localhost:8112/api/omise/setstatus",{});
+      await axios.post("http://localhost:8112/api/omise/setstatus", {});
     } catch (error) {
-      console.error('Error verifying', error);
+      console.error("Error verifying", error);
     }
   };
 
   const handleClose = () => {
     setOpen(false);
-    handleresetStatus()
+    handleresetStatus();
   };
+
+  const Popup = ({ isOpen, onClose, imageUrl }) => {
+    if (!isOpen) return null;
+  
+    // ปรับปรุงฟังก์ชัน onClose ที่นี่
+    const handleClose = () => {
+      onClose(); // เรียกใช้งาน onClose ที่ผ่านมาจาก props หากมีการจัดการเพิ่มเติมในนั้น
+      window.location.reload(); // Refresh หน้าเว็บ
+    };
+  
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-md max-h-[35vh] w-full overflow-auto">
+          <div className="flex justify-end p-2">
+            <button onClick={handleClose} className="text-black text-xl">
+              &times; Close
+            </button>
+          </div>
+          <img src={imageUrl} alt="Authorization" className="max-w-full max-h-[30vh] mx-auto p-4" />
+        </div>
+      </div>
+    );
+  };
+  
+  
+  
+  
 
   return (
     <div className="flex flex-col items-center p-4 mt-8 text-white">
+       <Popup
+      isOpen={isPopupOpen}
+      onClose={() => setIsPopupOpen(false)}
+      imageUrl={authorizeUri}
+    />
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
@@ -423,32 +518,55 @@ function Profile() {
         </Alert>
       </Snackbar>
       {statusMessage && (
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        sx={{
-          '& .MuiDialog-paper': {
-            backgroundColor: '#f0f0f0',
-            minWidth: '30%',
-          },
-        }}
-      >
-        <DialogTitle sx={{ backgroundColor: '#00df9a', color: '#ffffff' }}>Payment Status</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6" component="p" sx={{ color: '#333', marginBottom: '16px' }}>
-            Amount: {amount} THB
-          </Typography>
-          <DialogContentText>
-            <Typography variant="body1" component="p" sx={{ color: statusMessage === 'Successful' ? '#4caf50' : '#f44336', fontSize: '1.25rem' }}>
-              {statusMessage}
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          sx={{
+            "& .MuiDialog-paper": {
+              backgroundColor: "#f0f0f0",
+              minWidth: "30%",
+            },
+          }}
+        >
+          <DialogTitle sx={{ backgroundColor: "#00df9a", color: "#ffffff" }}>
+            Payment Status
+          </DialogTitle>
+          <DialogContent>
+            <Typography
+              variant="h6"
+              component="p"
+              sx={{ color: "#333", marginBottom: "16px" }}
+            >
+              Amount: {amount} THB
             </Typography>
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} variant="contained" sx={{ backgroundColor: '#00df9a', '&:hover': { backgroundColor: '#00b386' }}}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    )}
+            <DialogContentText>
+              <Typography
+                variant="body1"
+                component="p"
+                sx={{
+                  color: statusMessage === "Successful" ? "#4caf50" : "#f44336",
+                  fontSize: "1.25rem",
+                }}
+              >
+                {statusMessage}
+              </Typography>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleClose}
+              variant="contained"
+              sx={{
+                backgroundColor: "#00df9a",
+                "&:hover": { backgroundColor: "#00b386" },
+              }}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+       
       <div className="w-full max-w-4xl">
         <div className="flex flex-col md:flex-row">
           <div className=" border border-[#0f1419] bg-[#1a222c] rounded-lg shadow-lg p-8 mb-4 md:mr-4 md:flex-grow">
@@ -616,7 +734,7 @@ function Profile() {
               >
                 {calculateTotalCommission() <= 20
                   ? "Must pay a minimum of 20฿"
-                  : "Pay Commission"}
+                  : "Pay With Credit Card"}
               </button>
               <button
                 id="internet-bank"
@@ -632,6 +750,21 @@ function Profile() {
                 {calculateTotalCommission() <= 20
                   ? "Must pay a minimum of 20฿"
                   : "Pay with Bank"}
+              </button>
+              <button
+                id="promptpay"
+                type="button"
+                onClick={handlePromptPay}
+                disabled={calculateTotalCommission() <= 20}
+                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                  calculateTotalCommission() <= 20
+                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                    : "bg-[#00df9a] hover:bg-[#44967c]"
+                }`}
+              >
+                {calculateTotalCommission() <= 20
+                  ? "Must pay a minimum of 20฿"
+                  : "Pay with PromptPay"}
               </button>
               <button
                 type="button" // Change to 'button' to prevent it from submitting a form
