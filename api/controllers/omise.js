@@ -46,7 +46,7 @@ const Omisepayment = async (req, res, next) => {
 };
 
 const OmisepaymentBank = async (req, res, next) => {
-  const { amount, token, selectedTransactions } = req.body;
+  const { email,amount, token, selectedTransactions } = req.body;
 
   try {
     slipData.amount = amount;
@@ -56,7 +56,9 @@ const OmisepaymentBank = async (req, res, next) => {
       source: token,
       return_uri: "http://localhost:8110/profile",
       metadata: {
+        email:email,
         selectedTransactions: selectedTransactions,
+        amount: amount,
       },
     });
 
@@ -100,6 +102,20 @@ const OmiseWebhook = async (req, res, next) => {
   }
   next();
 };
+// const OmiseWebhook = (req, res, next) => {
+//   console.log(req.body)
+//   try {
+
+//     res.status(200).send("webhook ok" );
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .send({ error: "An error occurred during the payment process." });
+//   }
+//   next();
+// };
+
 const getstatus = (req, res) => {
   try {
     res.status(200).send({ slipData: slipData });
@@ -109,8 +125,7 @@ const getstatus = (req, res) => {
 };
 const setstatus = (req, res) => {
   try {
-        slipData.status= null,
-        slipData.amount= null
+    (slipData.status = null), (slipData.amount = null);
 
     res.status(200).send({ slipData: slipData });
   } catch (err) {

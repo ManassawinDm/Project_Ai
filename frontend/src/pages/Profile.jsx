@@ -318,7 +318,7 @@ function Profile() {
           .catch((error) => {
             setOpenSnackbar(true);
             setSnackbarMessage("Payment failed");
-            setSnackbarSeverity("error");
+            setSnackbarSeverity("error",error);
           });
       },
       onFormClosed: () => {},
@@ -328,6 +328,7 @@ function Profile() {
   const bankConfigure = () => {
     OmiseCard.configure({
       defaultPaymentMethod: "internet_banking",
+      otherPaymentMethods: ["mobile_banking_bay","mobile_banking_bbl","mobile_banking_kbank","mobile_banking_ktb","mobile_banking_scb"],
     });
     OmiseCard.configureButton("#internet-bank");
     OmiseCard.attach();
@@ -341,14 +342,13 @@ function Profile() {
           const response = await axios.post(
             "http://localhost:8112/api/omise/paymentBank",
             {
+              email: userEmail,
               amount: calculateTotalCommissionforOmise(),
               selectedTransactions: selectedTransactions,
               token: token,
             }
           );
-          // setOpenSnackbar(true);
-          // setSnackbarMessage("Payment successful");
-          // setSnackbarSeverity("success");
+
           const { authorizeUri } = response.data;
           if (authorizeUri) {
             window.location.href = authorizeUri;
@@ -391,8 +391,6 @@ function Profile() {
       console.error('Error verifying', error);
     }
   };
-
-  
 
   const handleClose = () => {
     setOpen(false);
