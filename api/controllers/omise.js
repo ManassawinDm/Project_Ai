@@ -2,7 +2,9 @@ require("dotenv").config();
 const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const db = require("../db.js");
+require('dotenv').config();
 var omise = require("omise")({
+  
   publicKey: process.env.VITE_OMISE_PUBLIC_KEY,
   secretKey: process.env.VITE_OMISE_SECRET_KEY,
 });
@@ -56,7 +58,7 @@ const OmisepaymentBank = async (req, res, next) => {
       amount: amount,
       currency: "thb",
       source: token,
-      return_uri: `${import.meta.env.VITE_API_URLF}/profile`,
+      return_uri: `${process.env.VITE_API_URLF}/profile`,
       metadata: {
         email:email,
         selectedTransactions: selectedTransactions,

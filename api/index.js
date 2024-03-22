@@ -16,6 +16,14 @@ app.use(cookieParser());
 app.use(cors());
 
 // Use the routes
+app.post('/test', (req,res)=>{
+    try{
+        res.json("server ok")
+
+    }catch(err){
+        res.status(500).json("sever error")
+    }
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/file', fileRoutes); 

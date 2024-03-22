@@ -44,6 +44,7 @@ function Profile() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [authorizeUri, setAuthorizeUri] = useState("");
   const [showPaymentButtons, setShowPaymentButtons] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const calculateTotalCommission = () => {
     const totalCommissionInBaht = selectedTransactions.reduce(
@@ -137,7 +138,7 @@ function Profile() {
   const fetchTransactions = async (portId) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/user/transactions/${portId}`
+        `${apiUrl}/api/user/transactions/${portId}`
       );
       const transactionsWithLockInfo = response.data.transactions.map(
         (transaction) => {
@@ -164,6 +165,7 @@ function Profile() {
       }
 
       setTransactions(transactionsWithLockInfo);
+      console.log(response)
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
@@ -199,7 +201,7 @@ function Profile() {
     try {
       // Add port to the server
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/user/addPort`,
+        `${apiUrl}/api/user/addPort`,
         { portNumber: NewPort },
         {
           headers: {
@@ -219,7 +221,7 @@ function Profile() {
       formData.append("verificationImage", verificationImage);
       formData.append("portId", portId);
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/port`, formData, {
+      await axios.post(`${apiUrl}/api/file/upload/port`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -243,7 +245,7 @@ function Profile() {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/user/fetchUserData`,
+          `${apiUrl}/api/user/fetchUserData`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -325,7 +327,7 @@ function Profile() {
       amount: calculateTotalCommissionforOmise(),
       onCreateTokenSuccess: (token) => {
         axios
-          .post(`${import.meta.env.VITE_API_URL}/api/omise/payment`, {
+          .post(`${apiUrl}/api/omise/payment`, {
             email: userEmail,
             amount: calculateTotalCommissionforOmise(),
             port_id: selectedPortData.port_id,
@@ -368,7 +370,7 @@ function Profile() {
       onCreateTokenSuccess: async (token) => {
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/omise/paymentBank`,
+            `${apiUrl}/api/omise/paymentBank`,
             {
               email: userEmail,
               amount: calculateTotalCommissionforOmise(),
@@ -405,7 +407,7 @@ function Profile() {
       onCreateTokenSuccess: async (token) => {
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/omise/paymentpromtpay`,
+            `${apiUrl}/api/omise/paymentpromtpay`,
             {
               amount: calculateTotalCommissionforOmise(),
               selectedTransactions: selectedTransactions,
@@ -431,7 +433,7 @@ function Profile() {
     const getStatus = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/omise/getstatus`
+          `${apiUrl}/api/omise/getstatus`
         );
         console.log(response);
         const { status, amount } = response.data.slipData;
@@ -452,7 +454,7 @@ function Profile() {
 
   const handleresetStatus = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/omise/setstatus`, {});
+      await axios.post(`${apiUrl}/api/omise/setstatus`, {});
     } catch (error) {
       console.error("Error verifying", error);
     }

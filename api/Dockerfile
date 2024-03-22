@@ -30,4 +30,5 @@ EXPOSE 8112
 # Use a shell script to start both Node.js and Python applications
 COPY start-app.sh .
 RUN chmod +x start-app.sh
-CMD ["./start-app.sh"]
+CMD ["/bin/bash", "./start-app.sh"]
+

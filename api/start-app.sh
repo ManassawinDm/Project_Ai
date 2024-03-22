@@ -1,6 +1,4 @@
-#!/bin/sh
-
-# Activate the virtual environment
+#!/bin/bash
 . /usr/src/app/venv/bin/activate
 
 # Run checkpython.js with node
