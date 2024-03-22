@@ -42,8 +42,8 @@ function Profile() {
   const [statusMessage, setStatusMessage] = useState("");
   const [amount, setAmount] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [authorizeUri, setAuthorizeUri] = useState('');
-
+  const [authorizeUri, setAuthorizeUri] = useState("");
+  const [showPaymentButtons, setShowPaymentButtons] = useState(false);
 
   const calculateTotalCommission = () => {
     const totalCommissionInBaht = selectedTransactions.reduce(
@@ -112,7 +112,7 @@ function Profile() {
 
   const handlePromptPay = (event) => {
     event.preventDefault(); // Prevent the default form submission behavior
-    promtpayConfigure()
+    promtpayConfigure();
     omisepromtpayHandler();
   };
 
@@ -137,7 +137,7 @@ function Profile() {
   const fetchTransactions = async (portId) => {
     try {
       const response = await axios.get(
-        `http://localhost:8112/api/user/transactions/${portId}`
+        `${import.meta.env.VITE_API_URL}/api/user/transactions/${portId}`
       );
       const transactionsWithLockInfo = response.data.transactions.map(
         (transaction) => {
@@ -199,7 +199,7 @@ function Profile() {
     try {
       // Add port to the server
       const response = await axios.post(
-        "http://localhost:8112/api/user/addPort",
+        `${import.meta.env.VITE_API_URL}/api/user/addPort`,
         { portNumber: NewPort },
         {
           headers: {
@@ -219,7 +219,7 @@ function Profile() {
       formData.append("verificationImage", verificationImage);
       formData.append("portId", portId);
 
-      await axios.post("http://localhost:8112/api/file/upload/port", formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/file/upload/port`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -243,7 +243,7 @@ function Profile() {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8112/api/user/fetchUserData",
+          `${import.meta.env.VITE_API_URL}/api/user/fetchUserData`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -292,6 +292,9 @@ function Profile() {
       );
     }
   };
+  const handleShowPaymentOptions = () => {
+    setShowPaymentButtons(!showPaymentButtons);
+  };
 
   /*{Omise}*/
   const handleLoadScript = () => {
@@ -322,7 +325,7 @@ function Profile() {
       amount: calculateTotalCommissionforOmise(),
       onCreateTokenSuccess: (token) => {
         axios
-          .post("http://localhost:8112/api/omise/payment", {
+          .post(`${import.meta.env.VITE_API_URL}/api/omise/payment`, {
             email: userEmail,
             amount: calculateTotalCommissionforOmise(),
             port_id: selectedPortData.port_id,
@@ -365,7 +368,7 @@ function Profile() {
       onCreateTokenSuccess: async (token) => {
         try {
           const response = await axios.post(
-            "http://localhost:8112/api/omise/paymentBank",
+            `${import.meta.env.VITE_API_URL}/api/omise/paymentBank`,
             {
               email: userEmail,
               amount: calculateTotalCommissionforOmise(),
@@ -392,7 +395,7 @@ function Profile() {
     OmiseCard.configure({
       defaultPaymentMethod: "promptpay",
     });
-    OmiseCard.configureButton("#internet-bank");
+    OmiseCard.configureButton("#promptpay");
     OmiseCard.attach();
   };
 
@@ -402,7 +405,7 @@ function Profile() {
       onCreateTokenSuccess: async (token) => {
         try {
           const response = await axios.post(
-            "http://localhost:8112/api/omise/paymentpromtpay",
+            `${import.meta.env.VITE_API_URL}/api/omise/paymentpromtpay`,
             {
               amount: calculateTotalCommissionforOmise(),
               selectedTransactions: selectedTransactions,
@@ -428,7 +431,7 @@ function Profile() {
     const getStatus = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8112/api/omise/getstatus"
+          `${import.meta.env.VITE_API_URL}/api/omise/getstatus`
         );
         console.log(response);
         const { status, amount } = response.data.slipData;
@@ -449,7 +452,7 @@ function Profile() {
 
   const handleresetStatus = async () => {
     try {
-      await axios.post("http://localhost:8112/api/omise/setstatus", {});
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/omise/setstatus`, {});
     } catch (error) {
       console.error("Error verifying", error);
     }
@@ -462,13 +465,12 @@ function Profile() {
 
   const Popup = ({ isOpen, onClose, imageUrl }) => {
     if (!isOpen) return null;
-  
-    // ปรับปรุงฟังก์ชัน onClose ที่นี่
+
     const handleClose = () => {
-      onClose(); // เรียกใช้งาน onClose ที่ผ่านมาจาก props หากมีการจัดการเพิ่มเติมในนั้น
-      window.location.reload(); // Refresh หน้าเว็บ
+      onClose();
+      window.location.reload();
     };
-  
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
         <div className="bg-white rounded-lg shadow-xl max-w-md max-h-[35vh] w-full overflow-auto">
@@ -477,23 +479,23 @@ function Profile() {
               &times; Close
             </button>
           </div>
-          <img src={imageUrl} alt="Authorization" className="max-w-full max-h-[30vh] mx-auto p-4" />
+          <img
+            src={imageUrl}
+            alt="Authorization"
+            className="max-w-full max-h-[30vh] mx-auto p-4"
+          />
         </div>
       </div>
     );
   };
-  
-  
-  
-  
 
   return (
     <div className="flex flex-col items-center p-4 mt-8 text-white">
-       <Popup
-      isOpen={isPopupOpen}
-      onClose={() => setIsPopupOpen(false)}
-      imageUrl={authorizeUri}
-    />
+      <Popup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        imageUrl={authorizeUri}
+      />
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
@@ -566,7 +568,7 @@ function Profile() {
           </DialogActions>
         </Dialog>
       )}
-       
+
       <div className="w-full max-w-4xl">
         <div className="flex flex-col md:flex-row">
           <div className=" border border-[#0f1419] bg-[#1a222c] rounded-lg shadow-lg p-8 mb-4 md:mr-4 md:flex-grow">
@@ -722,50 +724,68 @@ function Profile() {
                 </div>
               )}
               <button
-                id="credit-card"
                 type="button"
-                onClick={handlePay}
-                disabled={calculateTotalCommission() <= 20}
-                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
-                  calculateTotalCommission() <= 20
-                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
-                    : "bg-[#00df9a] hover:bg-[#44967c]"
-                }`}
+                onClick={handleShowPaymentOptions}
+                className="w-full text-black py-3 rounded-lg bg-[#00df9a] hover:bg-[#44967c] transition duration-300 ease-in-out"
               >
-                {calculateTotalCommission() <= 20
-                  ? "Must pay a minimum of 20฿"
-                  : "Pay With Credit Card"}
+                Choose Payment Method
               </button>
-              <button
-                id="internet-bank"
-                type="button"
-                onClick={handlePaybank}
-                disabled={calculateTotalCommission() <= 20}
-                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
-                  calculateTotalCommission() <= 20
-                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
-                    : "bg-[#00df9a] hover:bg-[#44967c]"
-                }`}
-              >
-                {calculateTotalCommission() <= 20
-                  ? "Must pay a minimum of 20฿"
-                  : "Pay with Bank"}
-              </button>
-              <button
-                id="promptpay"
-                type="button"
-                onClick={handlePromptPay}
-                disabled={calculateTotalCommission() <= 20}
-                className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
-                  calculateTotalCommission() <= 20
-                    ? "bg-[#44967c] opacity-50 cursor-not-allowed"
-                    : "bg-[#00df9a] hover:bg-[#44967c]"
-                }`}
-              >
-                {calculateTotalCommission() <= 20
-                  ? "Must pay a minimum of 20฿"
-                  : "Pay with PromptPay"}
-              </button>
+
+              {showPaymentButtons && (
+                <div className="space-y-2 mt-3">
+                  {/* Credit Card Button */}
+                  <button
+                    id="credit-card"
+                    type="button"
+                    onClick={handlePay}
+                    disabled={calculateTotalCommission() <= 20}
+                    className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                      calculateTotalCommission() <= 20
+                        ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                        : "bg-[#00df9a] hover:bg-[#44967c]"
+                    }`}
+                  >
+                    {calculateTotalCommission() <= 20
+                      ? "Must pay a minimum of 20฿"
+                      : "Pay With Credit Card"}
+                  </button>
+
+                  {/* Internet Banking Button */}
+                  <button
+                    id="internet-bank"
+                    type="button"
+                    onClick={handlePaybank}
+                    disabled={calculateTotalCommission() <= 20}
+                    className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                      calculateTotalCommission() <= 20
+                        ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                        : "bg-[#00df9a] hover:bg-[#44967c]"
+                    }`}
+                  >
+                    {calculateTotalCommission() <= 20
+                      ? "Must pay a minimum of 20฿"
+                      : "Pay with Bank"}
+                  </button>
+
+                  {/* PromptPay Button */}
+                  <button
+                    id="promptpay"
+                    type="button"
+                    onClick={handlePromptPay}
+                    disabled={calculateTotalCommission() <= 20}
+                    className={`w-full text-[#133f31] py-3 rounded-lg transition duration-300 ease-in-out ${
+                      calculateTotalCommission() <= 20
+                        ? "bg-[#44967c] opacity-50 cursor-not-allowed"
+                        : "bg-[#00df9a] hover:bg-[#44967c]"
+                    }`}
+                  >
+                    {calculateTotalCommission() <= 20
+                      ? "Must pay a minimum of 20฿"
+                      : "Pay with PromptPay"}
+                  </button>
+                </div>
+              )}
+
               <button
                 type="button" // Change to 'button' to prevent it from submitting a form
                 onClick={handlePayqrcode}

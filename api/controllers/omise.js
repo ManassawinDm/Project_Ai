@@ -56,7 +56,7 @@ const OmisepaymentBank = async (req, res, next) => {
       amount: amount,
       currency: "thb",
       source: token,
-      return_uri: "http://localhost:8110/profile",
+      return_uri: `${import.meta.env.VITE_API_URLF}/profile`,
       metadata: {
         email:email,
         selectedTransactions: selectedTransactions,
