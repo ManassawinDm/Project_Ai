@@ -10,6 +10,8 @@ services:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
       - /usr/src/app/venv
+      - ./api/public:/usr/src/app/public
+
     depends_on:
       - db
     env_file: 
@@ -54,6 +56,20 @@ services:
       PMA_HOST: db
     depends_on:
       - db
+
+  
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - '443:443'
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /path/to/certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+      - frontend
+    restart: always
 
       
 volumes:
